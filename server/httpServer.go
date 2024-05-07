@@ -2,6 +2,9 @@ package server
 
 import (
 	"database/sql"
+	"eventom-backend/controllers"
+	"eventom-backend/repositories"
+	"eventom-backend/services"
 	"log"
 	"net/http"
 
@@ -14,7 +17,13 @@ type HttpServer struct {
 }
 
 func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
+	eventsRepository := repositories.NewEventsRepository(db)
+	eventsService := services.NewEventsService(eventsRepository)
+	eventsController := controllers.NewEventsController(eventsService)
+
 	router := http.NewServeMux()
+
+	router.HandleFunc("POST /events", eventsController.ApiCreateEvent)
 
 	server := &http.Server{
 		Addr:    config.GetString("SERVER_PORT"),
