@@ -11,11 +11,13 @@ import (
 
 type EventsController struct {
 	eventsService services.EventsServiceInterface
+	validator     *validator.Validate
 }
 
 func NewEventsController(eventsService services.EventsServiceInterface) *EventsController {
 	return &EventsController{
 		eventsService: eventsService,
+		validator:     validator.New(),
 	}
 }
 
@@ -28,10 +30,10 @@ func (ec EventsController) ApiCreateEvent(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = validator.New().Struct(event)
+	err = ec.validator.Struct(&event)
 
 	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
