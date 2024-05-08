@@ -26,7 +26,7 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 	err := json.NewDecoder(r.Body).Decode(&event)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
