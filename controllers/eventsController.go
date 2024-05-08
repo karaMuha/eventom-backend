@@ -21,7 +21,7 @@ func NewEventsController(eventsService services.EventsServiceInterface) *EventsC
 	}
 }
 
-func (ec EventsController) ApiCreateEvent(w http.ResponseWriter, r *http.Request) {
+func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	var event models.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 

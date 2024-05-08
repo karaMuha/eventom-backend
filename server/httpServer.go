@@ -23,7 +23,7 @@ func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /events", eventsController.ApiCreateEvent)
+	router.HandleFunc("POST /events", eventsController.HandleCreateEvent)
 
 	server := &http.Server{
 		Addr:    config.GetString("SERVER_PORT"),
