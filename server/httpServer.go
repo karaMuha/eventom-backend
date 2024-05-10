@@ -18,8 +18,11 @@ type HttpServer struct {
 
 func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
 	eventsRepository := repositories.NewEventsRepository(db)
+	usersRepository := repositories.NewUsersRepository(db)
 	eventsService := services.NewEventsService(eventsRepository)
+	usersService := services.NewUsersService(usersRepository)
 	eventsController := controllers.NewEventsController(eventsService)
+	usersController := controllers.NewUsersController(usersService)
 
 	router := http.NewServeMux()
 
@@ -28,6 +31,8 @@ func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
 	router.HandleFunc("GET /events", eventsController.HandleGetAllEvents)
 	router.HandleFunc("PUT /events/{id}", eventsController.HandleUpdateEvent)
 	router.HandleFunc("DELETE /events/{id}", eventsController.HandleDeleteEvent)
+
+	router.HandleFunc("POST /signup", usersController.HandleSignupUser)
 
 	server := &http.Server{
 		Addr:    config.GetString("SERVER_PORT"),
