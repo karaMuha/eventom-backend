@@ -18,3 +18,15 @@ func NewEventsService(eventsRepository repositories.EventsRepositoryInterface) E
 func (es EventsService) CreateEvent(event *models.Event) (*models.Event, *models.ResponseError) {
 	return es.eventsRepository.QueryCreateEvent(event)
 }
+
+func (es EventsService) GetEvent(eventId string) (*models.Event, *models.ResponseError) {
+	return es.eventsRepository.QueryGetEvent(eventId)
+}
+
+func (es EventsService) GetAllEvents() ([]*models.Event, *models.ResponseError) {
+	return es.eventsRepository.QueryGetAllEvents()
+}
+
+func (es EventsService) UpdateEvent(event *models.Event) *models.ResponseError {
+	return es.eventsRepository.QueryUpdateEvent(event)
+}

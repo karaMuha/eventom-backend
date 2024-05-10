@@ -24,6 +24,9 @@ func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
 	router := http.NewServeMux()
 
 	router.HandleFunc("POST /events", eventsController.HandleCreateEvent)
+	router.HandleFunc("GET /events/{id}", eventsController.HandleGetEvent)
+	router.HandleFunc("GET /events", eventsController.HandleGetAllEvents)
+	router.HandleFunc("PUT /events/{id}", eventsController.HandleUpdateEvent)
 
 	server := &http.Server{
 		Addr:    config.GetString("SERVER_PORT"),
