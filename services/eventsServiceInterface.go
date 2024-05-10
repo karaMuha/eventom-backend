@@ -10,4 +10,6 @@ type EventsServiceInterface interface {
 	GetAllEvents() ([]*models.Event, *models.ResponseError)
 
 	UpdateEvent(*models.Event) *models.ResponseError
+
+	DeleteEvent(string) *models.ResponseError
 }

@@ -144,3 +144,21 @@ func (er EventsRepository) QueryUpdateEvent(event *models.Event) *models.Respons
 
 	return nil
 }
+
+func (er EventsRepository) QueryDeleteEvent(eventId string) *models.ResponseError {
+	query := `
+		DELETE FROM
+			events
+		WHERE
+			id = $1`
+	_, err := er.db.Exec(query, eventId)
+
+	if err != nil {
+		return &models.ResponseError{
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}

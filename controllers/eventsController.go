@@ -140,3 +140,28 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Request) {
+	eventId := r.PathValue("id")
+
+	existingEvent, responseErr := ec.eventsService.GetEvent(eventId)
+
+	if responseErr != nil {
+		http.Error(w, responseErr.Message, responseErr.Status)
+		return
+	}
+
+	if existingEvent == nil {
+		http.Error(w, "Event not found", http.StatusNotFound)
+		return
+	}
+
+	responseErr = ec.eventsService.DeleteEvent(eventId)
+
+	if responseErr != nil {
+		http.Error(w, responseErr.Message, responseErr.Status)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

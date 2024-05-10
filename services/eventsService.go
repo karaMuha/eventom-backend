@@ -30,3 +30,7 @@ func (es EventsService) GetAllEvents() ([]*models.Event, *models.ResponseError) 
 func (es EventsService) UpdateEvent(event *models.Event) *models.ResponseError {
 	return es.eventsRepository.QueryUpdateEvent(event)
 }
+
+func (es EventsService) DeleteEvent(eventId string) *models.ResponseError {
+	return es.eventsRepository.QueryDeleteEvent(eventId)
+}

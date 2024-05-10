@@ -10,4 +10,6 @@ type EventsRepositoryInterface interface {
 	QueryGetAllEvents() ([]*models.Event, *models.ResponseError)
 
 	QueryUpdateEvent(*models.Event) *models.ResponseError
+
+	QueryDeleteEvent(string) *models.ResponseError
 }
