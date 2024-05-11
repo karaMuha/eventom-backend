@@ -3,6 +3,7 @@ package services
 import (
 	"eventom-backend/models"
 	"eventom-backend/repositories"
+	"net/http"
 )
 
 type EventsService struct {
@@ -27,10 +28,24 @@ func (es EventsService) GetAllEvents() ([]*models.Event, *models.ResponseError) 
 	return es.eventsRepository.QueryGetAllEvents()
 }
 
-func (es EventsService) UpdateEvent(event *models.Event) *models.ResponseError {
+func (es EventsService) UpdateEvent(event *models.Event, userId string) *models.ResponseError {
+	if event.UserId != userId {
+		return &models.ResponseError{
+			Message: "Only the author of an event can edit the event",
+			Status:  http.StatusUnauthorized,
+		}
+	}
+
 	return es.eventsRepository.QueryUpdateEvent(event)
 }
 
-func (es EventsService) DeleteEvent(eventId string) *models.ResponseError {
-	return es.eventsRepository.QueryDeleteEvent(eventId)
+func (es EventsService) DeleteEvent(event *models.Event, userId string) *models.ResponseError {
+	if event.UserId != userId {
+		return &models.ResponseError{
+			Message: "Only the author of an event can edit the event",
+			Status:  http.StatusUnauthorized,
+		}
+	}
+
+	return es.eventsRepository.QueryDeleteEvent(event.ID)
 }
