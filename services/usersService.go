@@ -56,5 +56,7 @@ func (us UsersService) ValidateCredentials(user *models.User) (bool, *models.Res
 		}
 	}
 
+	user.ID = userInDb.ID
+
 	return true, nil
 }
