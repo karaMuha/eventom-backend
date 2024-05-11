@@ -24,6 +24,8 @@ func NewEventsController(eventsService services.EventsServiceInterface) *EventsC
 func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	var event models.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
+	userId := r.Header.Get("userId")
+	event.UserId = userId
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

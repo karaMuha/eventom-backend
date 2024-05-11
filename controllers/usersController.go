@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"crypto/rsa"
 	"encoding/json"
 	"eventom-backend/models"
 	"eventom-backend/services"
 	"eventom-backend/utils"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -14,14 +14,12 @@ import (
 type UsersController struct {
 	usersService services.UsersServiceInterface
 	validator    *validator.Validate
-	privateKey   *rsa.PrivateKey
 }
 
-func NewUsersController(usersService services.UsersServiceInterface, privateKey *rsa.PrivateKey) *UsersController {
+func NewUsersController(usersService services.UsersServiceInterface) *UsersController {
 	return &UsersController{
 		usersService: usersService,
 		validator:    validator.New(),
-		privateKey:   privateKey,
 	}
 }
 
@@ -81,7 +79,7 @@ func (uc UsersController) HandleLoginUser(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	jwtToken, err := utils.GenerateJwt(user.ID, uc.privateKey)
+	jwtToken, err := utils.GenerateJwt(user.ID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -89,8 +87,11 @@ func (uc UsersController) HandleLoginUser(w http.ResponseWriter, r *http.Request
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  "jwt",
-		Value: jwtToken,
+		Name:     "jwt",
+		Value:    jwtToken,
+		Secure:   true,
+		HttpOnly: true,
+		Expires:  time.Now().Add(time.Hour),
 	})
 
 	w.WriteHeader(http.StatusOK)

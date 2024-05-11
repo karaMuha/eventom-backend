@@ -10,4 +10,5 @@ type Event struct {
 	Description string    `json:"description,omitempty" validate:"omitempty,max=255"`
 	Location    string    `json:"location" validate:"required"`
 	Date        time.Time `json:"date" validate:"required"`
+	UserId      string    `json:"userId"`
 }

@@ -4,6 +4,8 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
+	"eventom-backend/config"
 	"os"
 	"time"
 
@@ -47,12 +49,32 @@ func ReadPrivateKeyFromFile(filename string) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
-func GenerateJwt(userId string, privateKey *rsa.PrivateKey) (string, error) {
+func GenerateJwt(userId string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"userId": userId,
 		"iat":    time.Now().Unix(),
 		"exp":    time.Now().Add(time.Hour).Unix(),
 	})
 
-	return token.SignedString(privateKey)
+	return token.SignedString(config.PrivateKey)
+}
+
+func VerifyJwt(jwtToken string) (*jwt.Token, error) {
+	parsedToken, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
+		_, ok := token.Method.(*jwt.SigningMethodRSA)
+		if !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return config.PrivateKey.Public(), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !parsedToken.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return parsedToken, nil
 }
