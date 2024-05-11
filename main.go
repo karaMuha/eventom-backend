@@ -25,5 +25,6 @@ func main() {
 	log.Println("Initializinh http server")
 	httpServer := server.InitHttpServer(config, db)
 
+	log.Printf("Starting app on port %s", config.GetString("SERVER_PORT"))
 	httpServer.Start()
 }
