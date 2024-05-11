@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/rsa"
 	"log"
 
 	"github.com/spf13/viper"
@@ -20,3 +21,5 @@ func ReadEnvFile(filename string) *viper.Viper {
 
 	return config
 }
+
+var PrivateKey *rsa.PrivateKey

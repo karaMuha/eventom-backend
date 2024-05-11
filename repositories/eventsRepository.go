@@ -20,12 +20,12 @@ func NewEventsRepository(db *sql.DB) EventsRepositoryInterface {
 func (er EventsRepository) QueryCreateEvent(event *models.Event) (*models.Event, *models.ResponseError) {
 	query := `
 		INSERT INTO
-			events(event_name, event_description, event_location, event_date)
+			events(event_name, event_description, event_location, event_date, user_id)
 		VALUES
-			($1, $2, $3, $4)
+			($1, $2, $3, $4, $5)
 		RETURNING
 			id`
-	row := er.db.QueryRow(query, event.Name, event.Description, event.Location, event.Date)
+	row := er.db.QueryRow(query, event.Name, event.Description, event.Location, event.Date, event.UserId)
 
 	var eventId string
 	err := row.Scan(&eventId)
@@ -43,6 +43,7 @@ func (er EventsRepository) QueryCreateEvent(event *models.Event) (*models.Event,
 		Description: event.Description,
 		Location:    event.Location,
 		Date:        event.Date,
+		UserId:      event.UserId,
 	}, nil
 }
 
@@ -57,7 +58,7 @@ func (er EventsRepository) QueryGetEvent(eventId string) (*models.Event, *models
 	row := er.db.QueryRow(query, eventId)
 
 	var event models.Event
-	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.Date)
+	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.Date, &event.UserId)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -90,11 +91,11 @@ func (er EventsRepository) QueryGetAllEvents() ([]*models.Event, *models.Respons
 	defer rows.Close()
 
 	eventsList := make([]*models.Event, 0)
-	var eventId, name, description, location string
+	var eventId, name, description, location, userId string
 	var date time.Time
 
 	for rows.Next() {
-		err = rows.Scan(&eventId, &name, &description, &location, &date)
+		err = rows.Scan(&eventId, &name, &description, &location, &date, &userId)
 		if err != nil {
 			return nil, &models.ResponseError{
 				Message: err.Error(),
@@ -107,6 +108,7 @@ func (er EventsRepository) QueryGetAllEvents() ([]*models.Event, *models.Respons
 			Description: description,
 			Location:    location,
 			Date:        date,
+			UserId:      userId,
 		}
 		eventsList = append(eventsList, event)
 	}
