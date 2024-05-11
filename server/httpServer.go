@@ -5,6 +5,7 @@ import (
 	"eventom-backend/controllers"
 	"eventom-backend/repositories"
 	"eventom-backend/services"
+	"eventom-backend/utils"
 	"log"
 	"net/http"
 
@@ -17,12 +18,16 @@ type HttpServer struct {
 }
 
 func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
+	privateKey, err := utils.ReadPrivateKeyFromFile(config.GetString("PRIVATE_KEY_PATH"))
+	if err != nil {
+		log.Fatalf("Error while reading private key: %v", err)
+	}
 	eventsRepository := repositories.NewEventsRepository(db)
 	usersRepository := repositories.NewUsersRepository(db)
 	eventsService := services.NewEventsService(eventsRepository)
 	usersService := services.NewUsersService(usersRepository)
 	eventsController := controllers.NewEventsController(eventsService)
-	usersController := controllers.NewUsersController(usersService)
+	usersController := controllers.NewUsersController(usersService, privateKey)
 
 	router := http.NewServeMux()
 
@@ -33,6 +38,7 @@ func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
 	router.HandleFunc("DELETE /events/{id}", eventsController.HandleDeleteEvent)
 
 	router.HandleFunc("POST /signup", usersController.HandleSignupUser)
+	router.HandleFunc("POST /login", usersController.HandleLoginUser)
 
 	server := &http.Server{
 		Addr:    config.GetString("SERVER_PORT"),
