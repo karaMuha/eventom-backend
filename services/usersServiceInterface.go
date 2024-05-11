@@ -3,7 +3,9 @@ package services
 import "eventom-backend/models"
 
 type UsersServiceInterface interface {
-	SignupUser(*models.User) *models.ResponseError
+	SignupUser(user *models.User) *models.ResponseError
 
-	GetUser(string) (*models.User, *models.ResponseError)
+	GetUser(email string) (*models.User, *models.ResponseError)
+
+	ValidateCredentials(user *models.User) (bool, *models.ResponseError)
 }

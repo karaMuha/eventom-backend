@@ -24,6 +24,8 @@ func NewEventsController(eventsService services.EventsServiceInterface) *EventsC
 func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	var event models.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
+	userId := r.Header.Get("userId")
+	event.UserId = userId
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -105,17 +107,13 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 
 func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Request) {
 	var event models.Event
-	err := json.NewDecoder(r.Body).Decode(&event)
+	bodyDecorder := json.NewDecoder(r.Body)
+	eventId := r.PathValue("id")
+	event.ID = eventId
+	responseErr := ec.parseEvent(&event, bodyDecorder)
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = ec.validator.Struct(&event)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if responseErr != nil {
+		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
 
@@ -131,7 +129,11 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	responseErr = ec.eventsService.UpdateEvent(&event)
+	event.UserId = existingEvent.UserId
+
+	userId := r.Header.Get("userId")
+
+	responseErr = ec.eventsService.UpdateEvent(&event, userId)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
@@ -144,19 +146,21 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Request) {
 	eventId := r.PathValue("id")
 
-	existingEvent, responseErr := ec.eventsService.GetEvent(eventId)
+	event, responseErr := ec.eventsService.GetEvent(eventId)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
 
-	if existingEvent == nil {
+	if event == nil {
 		http.Error(w, "Event not found", http.StatusNotFound)
 		return
 	}
 
-	responseErr = ec.eventsService.DeleteEvent(eventId)
+	userId := r.Header.Get("userId")
+
+	responseErr = ec.eventsService.DeleteEvent(event, userId)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
@@ -164,4 +168,26 @@ func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (ec EventsController) parseEvent(event *models.Event, bodyDecoder *json.Decoder) *models.ResponseError {
+	err := bodyDecoder.Decode(event)
+
+	if err != nil {
+		return &models.ResponseError{
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	err = ec.validator.Struct(event)
+
+	if err != nil {
+		return &models.ResponseError{
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	return nil
 }

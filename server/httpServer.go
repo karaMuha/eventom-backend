@@ -2,9 +2,12 @@ package server
 
 import (
 	"database/sql"
+	"eventom-backend/config"
 	"eventom-backend/controllers"
+	"eventom-backend/middlewares"
 	"eventom-backend/repositories"
 	"eventom-backend/services"
+	"eventom-backend/utils"
 	"log"
 	"net/http"
 
@@ -16,7 +19,12 @@ type HttpServer struct {
 	server *http.Server
 }
 
-func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
+func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
+	privateKey, err := utils.ReadPrivateKeyFromFile(viperConfig.GetString("PRIVATE_KEY_PATH"))
+	if err != nil {
+		log.Fatalf("Error while reading private key: %v", err)
+	}
+	config.PrivateKey = privateKey
 	eventsRepository := repositories.NewEventsRepository(db)
 	usersRepository := repositories.NewUsersRepository(db)
 	eventsService := services.NewEventsService(eventsRepository)
@@ -25,22 +33,27 @@ func InitHttpServer(config *viper.Viper, db *sql.DB) HttpServer {
 	usersController := controllers.NewUsersController(usersService)
 
 	router := http.NewServeMux()
+	authRouter := http.NewServeMux()
 
-	router.HandleFunc("POST /events", eventsController.HandleCreateEvent)
+	authRouter.HandleFunc("POST /events", eventsController.HandleCreateEvent)
 	router.HandleFunc("GET /events/{id}", eventsController.HandleGetEvent)
 	router.HandleFunc("GET /events", eventsController.HandleGetAllEvents)
-	router.HandleFunc("PUT /events/{id}", eventsController.HandleUpdateEvent)
-	router.HandleFunc("DELETE /events/{id}", eventsController.HandleDeleteEvent)
+	authRouter.HandleFunc("PUT /events/{id}", eventsController.HandleUpdateEvent)
+	authRouter.HandleFunc("DELETE /events/{id}", eventsController.HandleDeleteEvent)
 
 	router.HandleFunc("POST /signup", usersController.HandleSignupUser)
+	router.HandleFunc("POST /login", usersController.HandleLoginUser)
+	router.HandleFunc("POST /logout", usersController.HandleLogoutUser)
+
+	router.Handle("/", middlewares.AuthMiddleware(authRouter))
 
 	server := &http.Server{
-		Addr:    config.GetString("SERVER_PORT"),
+		Addr:    viperConfig.GetString("SERVER_PORT"),
 		Handler: router,
 	}
 
 	return HttpServer{
-		config: config,
+		config: viperConfig,
 		server: server,
 	}
 }
