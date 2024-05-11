@@ -43,7 +43,7 @@ func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
 
 	router.HandleFunc("POST /signup", usersController.HandleSignupUser)
 	router.HandleFunc("POST /login", usersController.HandleLoginUser)
-	router.HandleFunc("POST /logout", usersController.HandleLogoutUser)
+	authRouter.HandleFunc("POST /logout", usersController.HandleLogoutUser)
 
 	router.Handle("/", middlewares.AuthMiddleware(authRouter))
 
