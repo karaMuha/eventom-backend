@@ -2,7 +2,6 @@ package server
 
 import (
 	"database/sql"
-	"eventom-backend/config"
 	"eventom-backend/controllers"
 	"eventom-backend/middlewares"
 	"eventom-backend/repositories"
@@ -20,11 +19,23 @@ type HttpServer struct {
 }
 
 func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
+	// initialize private key that is used to sign and verify jwt
 	privateKey, err := utils.ReadPrivateKeyFromFile(viperConfig.GetString("PRIVATE_KEY_PATH"))
 	if err != nil {
 		log.Fatalf("Error while reading private key: %v", err)
 	}
-	config.PrivateKey = privateKey
+	utils.PrivateKey = privateKey
+
+	// initialize protected routes map that is in auth middleware to determine whether a request needs to be authenticated or not
+	utils.ProtectedRoutes = make(map[string]bool, 7)
+	utils.ProtectedRoutes["POST events"] = true
+	utils.ProtectedRoutes["GET events"] = false
+	utils.ProtectedRoutes["PUT events"] = true
+	utils.ProtectedRoutes["DELETE events"] = true
+	utils.ProtectedRoutes["POST signup"] = false
+	utils.ProtectedRoutes["POST login"] = false
+	utils.ProtectedRoutes["POST logout"] = true
+
 	eventsRepository := repositories.NewEventsRepository(db)
 	usersRepository := repositories.NewUsersRepository(db)
 	eventsService := services.NewEventsService(eventsRepository)
@@ -33,23 +44,20 @@ func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
 	usersController := controllers.NewUsersController(usersService)
 
 	router := http.NewServeMux()
-	authRouter := http.NewServeMux()
 
-	authRouter.HandleFunc("POST /events", eventsController.HandleCreateEvent)
+	router.HandleFunc("POST /events", eventsController.HandleCreateEvent)
 	router.HandleFunc("GET /events/{id}", eventsController.HandleGetEvent)
 	router.HandleFunc("GET /events", eventsController.HandleGetAllEvents)
-	authRouter.HandleFunc("PUT /events/{id}", eventsController.HandleUpdateEvent)
-	authRouter.HandleFunc("DELETE /events/{id}", eventsController.HandleDeleteEvent)
+	router.HandleFunc("PUT /events/{id}", eventsController.HandleUpdateEvent)
+	router.HandleFunc("DELETE /events/{id}", eventsController.HandleDeleteEvent)
 
 	router.HandleFunc("POST /signup", usersController.HandleSignupUser)
 	router.HandleFunc("POST /login", usersController.HandleLoginUser)
-	authRouter.HandleFunc("POST /logout", usersController.HandleLogoutUser)
-
-	router.Handle("/", middlewares.AuthMiddleware(authRouter))
+	router.HandleFunc("POST /logout", usersController.HandleLogoutUser)
 
 	server := &http.Server{
 		Addr:    viperConfig.GetString("SERVER_PORT"),
-		Handler: router,
+		Handler: middlewares.AuthMiddleware(router),
 	}
 
 	return HttpServer{

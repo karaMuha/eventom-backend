@@ -5,13 +5,15 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"eventom-backend/config"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var PrivateKey *rsa.PrivateKey
+var ProtectedRoutes map[string]bool
 
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
@@ -56,7 +58,7 @@ func GenerateJwt(userId string) (string, error) {
 		"exp":    time.Now().Add(time.Hour).Unix(),
 	})
 
-	return token.SignedString(config.PrivateKey)
+	return token.SignedString(PrivateKey)
 }
 
 func VerifyJwt(jwtToken string) (*jwt.Token, error) {
@@ -65,7 +67,7 @@ func VerifyJwt(jwtToken string) (*jwt.Token, error) {
 		if !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return config.PrivateKey.Public(), nil
+		return PrivateKey.Public(), nil
 	})
 
 	if err != nil {
