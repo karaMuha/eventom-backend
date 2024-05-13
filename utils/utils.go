@@ -25,11 +25,11 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func ReadPrivateKeyFromFile(filename string) (*rsa.PrivateKey, error) {
+func ReadPrivateKeyFromFile(filename string) error {
 	file, err := os.Open(filename)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer file.Close()
 
@@ -39,16 +39,16 @@ func ReadPrivateKeyFromFile(filename string) (*rsa.PrivateKey, error) {
 
 	_, err = file.Read(buffer)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	data, _ := pem.Decode(buffer)
-	privateKey, err := x509.ParsePKCS1PrivateKey(data.Bytes)
+	PrivateKey, err = x509.ParsePKCS1PrivateKey(data.Bytes)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return privateKey, nil
+	return nil
 }
 
 func GenerateJwt(userId string) (string, error) {
@@ -79,4 +79,15 @@ func VerifyJwt(jwtToken string) (*jwt.Token, error) {
 	}
 
 	return parsedToken, nil
+}
+
+func SetProtectedRoutes() {
+	ProtectedRoutes = make(map[string]bool, 7)
+	ProtectedRoutes["POST events"] = true
+	ProtectedRoutes["GET events"] = false
+	ProtectedRoutes["PUT events"] = true
+	ProtectedRoutes["DELETE events"] = true
+	ProtectedRoutes["POST signup"] = false
+	ProtectedRoutes["POST login"] = false
+	ProtectedRoutes["POST logout"] = true
 }
