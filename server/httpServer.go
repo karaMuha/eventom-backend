@@ -20,21 +20,13 @@ type HttpServer struct {
 
 func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
 	// initialize private key that is used to sign and verify jwt
-	privateKey, err := utils.ReadPrivateKeyFromFile(viperConfig.GetString("PRIVATE_KEY_PATH"))
+	err := utils.ReadPrivateKeyFromFile(viperConfig.GetString("PRIVATE_KEY_PATH"))
 	if err != nil {
 		log.Fatalf("Error while reading private key: %v", err)
 	}
-	utils.PrivateKey = privateKey
 
 	// initialize protected routes map that is in auth middleware to determine whether a request needs to be authenticated or not
-	utils.ProtectedRoutes = make(map[string]bool, 7)
-	utils.ProtectedRoutes["POST events"] = true
-	utils.ProtectedRoutes["GET events"] = false
-	utils.ProtectedRoutes["PUT events"] = true
-	utils.ProtectedRoutes["DELETE events"] = true
-	utils.ProtectedRoutes["POST signup"] = false
-	utils.ProtectedRoutes["POST login"] = false
-	utils.ProtectedRoutes["POST logout"] = true
+	utils.SetProtectedRoutes()
 
 	eventsRepository := repositories.NewEventsRepository(db)
 	usersRepository := repositories.NewUsersRepository(db)
