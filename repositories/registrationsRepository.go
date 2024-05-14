@@ -16,6 +16,34 @@ func NewRegistrationsRepository(db *sql.DB) RegistrationsRepositoryInterface {
 	}
 }
 
+func (rr RegistrationsRepository) QueryGetRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError) {
+	query := `
+		SELECT
+			*
+		FROM
+			registrations
+		WHERE
+			event_id = $1
+			AND
+			user_id = $2`
+	row := rr.db.QueryRow(query, eventId, userId)
+
+	var registration models.Registration
+	err := row.Scan(&registration.ID, &registration.EventId, &registration.UserId)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, &models.ResponseError{
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	return &registration, nil
+}
+
 func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, userId string) (*models.Registration, *models.ResponseError) {
 	query := `
 		INSERT INTO
