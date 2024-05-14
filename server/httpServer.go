@@ -30,10 +30,15 @@ func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
 
 	eventsRepository := repositories.NewEventsRepository(db)
 	usersRepository := repositories.NewUsersRepository(db)
+	registrationsRepository := repositories.NewRegistrationsRepository(db)
+
 	eventsService := services.NewEventsService(eventsRepository)
 	usersService := services.NewUsersService(usersRepository)
+	registrationsService := services.NewRegistrationsService(registrationsRepository)
+
 	eventsController := controllers.NewEventsController(eventsService)
 	usersController := controllers.NewUsersController(usersService)
+	registrationsController := controllers.NewRegistrationsController(registrationsService)
 
 	router := http.NewServeMux()
 
@@ -46,6 +51,9 @@ func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
 	router.HandleFunc("POST /signup", usersController.HandleSignupUser)
 	router.HandleFunc("POST /login", usersController.HandleLoginUser)
 	router.HandleFunc("POST /logout", usersController.HandleLogoutUser)
+
+	router.HandleFunc("POST /events/{id}", registrationsController.HandleRegisterUserForEvent)
+	router.HandleFunc("DELETE /registrations/{id}", registrationsController.HandleCancleRegistration)
 
 	server := &http.Server{
 		Addr:    viperConfig.GetString("SERVER_PORT"),
