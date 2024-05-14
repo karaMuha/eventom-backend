@@ -18,3 +18,12 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL
 )
+
+--registrations
+CREATE TABLE IF NOT EXISTS registrations (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v1mc(),
+  event_id uuid,
+  user_id uuid,
+  FOREIGN KEY(event_id) REFERENCES events(id),
+  FOREIGN KEY(user_id) REFERENCES users(id)
+)
