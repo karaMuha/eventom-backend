@@ -25,7 +25,7 @@ func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
 		log.Fatalf("Error while reading private key: %v", err)
 	}
 
-	// initialize protected routes map that is in auth middleware to determine whether a request needs to be authenticated or not
+	// initialize protected routes map that is used in auth middleware to determine whether a request needs to be authenticated or not
 	utils.SetProtectedRoutes()
 
 	eventsRepository := repositories.NewEventsRepository(db)
