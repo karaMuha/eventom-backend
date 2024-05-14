@@ -23,6 +23,6 @@ func (rs RegistrationsService) GetRegistration(eventId string, userId string) (*
 	return rs.registrationsRepository.QueryGetRegistration(eventId, userId)
 }
 
-func (rs RegistrationsService) CancelRegistration(registrationId string, userId string) *models.ResponseError {
+func (rs RegistrationsService) CancelRegistration(registrationId string) *models.ResponseError {
 	return rs.registrationsRepository.QueryCancelRegistration(registrationId)
 }

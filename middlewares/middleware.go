@@ -10,8 +10,8 @@ import (
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestKey := r.Method + " " + strings.Split(r.URL.Path, "/")[1]
-		if !utils.ProtectedRoutes[requestKey] {
+		requestTarget := r.Method + " " + strings.Split(r.URL.Path, "/")[1]
+		if !utils.ProtectedRoutes[requestTarget] {
 			next.ServeHTTP(w, r)
 			return
 		}
