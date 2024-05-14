@@ -25,6 +25,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		// extract user id from token for further usage
 		claims, _ := verifiedToken.Claims.(jwt.MapClaims)
 		userId := claims["userId"].(string)
 		r.Header.Set("userId", userId)
