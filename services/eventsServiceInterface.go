@@ -9,7 +9,7 @@ type EventsServiceInterface interface {
 
 	GetAllEvents() ([]*models.Event, *models.ResponseError)
 
-	UpdateEvent(event *models.Event, userId string) *models.ResponseError
+	UpdateEvent(event *models.Event) *models.ResponseError
 
-	DeleteEvent(event *models.Event, userId string) *models.ResponseError
+	DeleteEvent(event *models.Event) *models.ResponseError
 }

@@ -14,9 +14,11 @@ func main() {
 
 	log.Println("Reading environment variables")
 	appEnvironment := os.Getenv("APP_ENV")
+
 	if appEnvironment == "" {
 		log.Fatal("Could not get app environment")
 	}
+
 	config := config.ReadEnvFile(appEnvironment)
 
 	log.Println("Initializing database")

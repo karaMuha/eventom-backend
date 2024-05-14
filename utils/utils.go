@@ -90,4 +90,5 @@ func SetProtectedRoutes() {
 	ProtectedRoutes["POST signup"] = false
 	ProtectedRoutes["POST login"] = false
 	ProtectedRoutes["POST logout"] = true
+	ProtectedRoutes["DELETE registrations"] = true
 }

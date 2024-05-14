@@ -24,14 +24,14 @@ func NewEventsController(eventsService services.EventsServiceInterface) *EventsC
 func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	var event models.Event
 	err := json.NewDecoder(r.Body).Decode(&event)
-	userId := r.Header.Get("userId")
-	event.UserId = userId
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	userId := r.Header.Get("userId")
+	event.UserId = userId
 	err = ec.validator.Struct(&event)
 
 	if err != nil {
@@ -133,7 +133,12 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 
 	userId := r.Header.Get("userId")
 
-	responseErr = ec.eventsService.UpdateEvent(&event, userId)
+	if event.UserId != userId {
+		http.Error(w, "Not allowed", http.StatusUnauthorized)
+		return
+	}
+
+	responseErr = ec.eventsService.UpdateEvent(&event)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
@@ -160,7 +165,12 @@ func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Requ
 
 	userId := r.Header.Get("userId")
 
-	responseErr = ec.eventsService.DeleteEvent(event, userId)
+	if event.UserId != userId {
+		http.Error(w, "Not allowed", http.StatusUnauthorized)
+		return
+	}
+
+	responseErr = ec.eventsService.DeleteEvent(event)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
