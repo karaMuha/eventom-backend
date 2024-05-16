@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"eventom-backend/models"
 	"eventom-backend/services"
+	"eventom-backend/utils"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -24,7 +25,7 @@ func NewRegistrationsController(registrationsService services.RegistrationsServi
 func (rc RegistrationsController) HandleRegisterUserForEvent(w http.ResponseWriter, r *http.Request) {
 	var registration models.Registration
 	eventId := r.PathValue("id")
-	userId := r.Header.Get("userId")
+	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 
 	registration.EventId = eventId
 	registration.UserId = userId
@@ -68,7 +69,7 @@ func (rc RegistrationsController) HandleRegisterUserForEvent(w http.ResponseWrit
 
 func (rc RegistrationsController) HandleCancleRegistration(w http.ResponseWriter, r *http.Request) {
 	eventId := r.PathValue("id")
-	userId := r.Header.Get("userId")
+	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 
 	registration, responseErr := rc.registrationsService.GetRegistration(eventId, userId)
 

@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"eventom-backend/utils"
 	"net/http"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
 		requestTarget := r.Method + " " + strings.Split(r.URL.Path, "/")[1]
 
 		if !utils.ProtectedRoutes[requestTarget] {
@@ -34,7 +36,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// extract user id from token for further usage
 		claims, _ := verifiedToken.Claims.(jwt.MapClaims)
 		userId := claims["userId"].(string)
-		r.Header.Set("userId", userId)
-		next.ServeHTTP(w, r)
+		ctx = context.WithValue(r.Context(), utils.ContextUserIdKey, userId)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -12,6 +12,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type ContextUserId string
+
+const ContextUserIdKey ContextUserId = "userId"
+
 var PrivateKey *rsa.PrivateKey
 var ProtectedRoutes map[string]bool
 
