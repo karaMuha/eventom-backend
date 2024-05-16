@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"eventom-backend/models"
 	"eventom-backend/services"
+	"eventom-backend/utils"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -30,7 +31,7 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	userId := r.Header.Get("userId")
+	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 	event.UserId = userId
 	err = ec.validator.Struct(&event)
 
@@ -131,7 +132,7 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 
 	event.UserId = existingEvent.UserId
 
-	userId := r.Header.Get("userId")
+	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 
 	if event.UserId != userId {
 		http.Error(w, "Not allowed", http.StatusUnauthorized)
@@ -163,7 +164,7 @@ func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	userId := r.Header.Get("userId")
+	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 
 	if event.UserId != userId {
 		http.Error(w, "Not allowed", http.StatusUnauthorized)
