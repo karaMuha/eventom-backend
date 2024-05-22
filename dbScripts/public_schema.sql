@@ -1,13 +1,12 @@
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA pg_catalog;
 
-
 --users
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v1mc(),
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL
-)
+);
 
 --events
 CREATE TABLE IF NOT EXISTS events (
@@ -27,4 +26,4 @@ CREATE TABLE IF NOT EXISTS registrations (
   user_id uuid,
   FOREIGN KEY(event_id) REFERENCES events(id),
   FOREIGN KEY(user_id) REFERENCES users(id)
-)
+);
