@@ -52,7 +52,7 @@ func (suite *UsersRepositoryTestSuite) SetupSuite() {
 }
 
 func (suite *UsersRepositoryTestSuite) BeforeTest(suiteName, testName string) {
-	// delete content of users table before every test, to avoid dependencies and side effects between tests
+	// delete content of users table before every test to avoid dependencies and side effects between tests
 
 	query := `
 		DELETE FROM
