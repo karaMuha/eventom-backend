@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	_ "github.com/lib/pq"
@@ -92,7 +93,7 @@ func (suite *UsersRepositoryTestSuite) TestGetUserFailNoUser() {
 
 func (suite *UsersRepositoryTestSuite) TestGetUserSuccess() {
 	err := suite.usersRepository.QuerySignupUser("test@test.com", "Test123")
-	assert.Nil(suite.T(), err)
+	require.Nil(suite.T(), err)
 
 	user, err := suite.usersRepository.QueryGetUser("test@test.com")
 	assert.Nil(suite.T(), err)
