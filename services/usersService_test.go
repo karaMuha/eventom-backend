@@ -51,13 +51,6 @@ func (suite *UsersServiceTestSuite) BeforeTest(suiteName, testName string) {
 	}
 }
 
-func (suite *UsersServiceTestSuite) TearDownSuite() {
-	err := suite.pgContainer.Terminate(suite.ctx)
-	if err != nil {
-		log.Fatalf("Error while terminating postgres container: %s", err)
-	}
-}
-
 func (suite *UsersServiceTestSuite) TestSignupUserSuccess() {
 	user := &models.User{
 		Email:    "test@test.com",
