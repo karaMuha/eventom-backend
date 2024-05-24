@@ -37,9 +37,8 @@ func (suite *UsersRepositoryTestSuite) SetupSuite() {
 	suite.usersRepository = NewUsersRepository(pgContainer.DB)
 }
 
-func (suite *UsersRepositoryTestSuite) BeforeTest(suiteName, testName string) {
-	// delete content of users table before every test to avoid dependencies and side effects between tests
-
+func (suite *UsersRepositoryTestSuite) AfterTest(suiteName, testName string) {
+	// clear users table before every test to avoid dependencies and side effects between tests
 	query := `
 		DELETE FROM
 			users`
@@ -47,13 +46,6 @@ func (suite *UsersRepositoryTestSuite) BeforeTest(suiteName, testName string) {
 
 	if err != nil {
 		log.Fatal(err)
-	}
-}
-
-func (suite *UsersRepositoryTestSuite) TearDownSuite() {
-	err := suite.pgContainer.Terminate(suite.ctx)
-	if err != nil {
-		log.Fatalf("Error while terminating postgres container: %s", err)
 	}
 }
 
