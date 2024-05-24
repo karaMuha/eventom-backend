@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"eventom-backend/testutils"
 	"log"
 	"testing"
@@ -18,7 +17,6 @@ type UsersRepositoryTestSuite struct {
 	suite.Suite
 	ctx             context.Context
 	pgContainer     *testutils.PostgresContainer
-	dbHandler       *sql.DB
 	usersRepository UsersRepositoryInterface
 }
 
@@ -35,21 +33,8 @@ func (suite *UsersRepositoryTestSuite) SetupSuite() {
 	}
 
 	suite.pgContainer = pgContainer
-	dbHandler, err := sql.Open("postgres", suite.pgContainer.ConnectionString)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = dbHandler.Ping()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	suite.dbHandler = dbHandler
-
-	suite.usersRepository = NewUsersRepository(dbHandler)
+	suite.usersRepository = NewUsersRepository(pgContainer.DB)
 }
 
 func (suite *UsersRepositoryTestSuite) BeforeTest(suiteName, testName string) {
@@ -58,7 +43,7 @@ func (suite *UsersRepositoryTestSuite) BeforeTest(suiteName, testName string) {
 	query := `
 		DELETE FROM
 			users`
-	_, err := suite.dbHandler.Exec(query)
+	_, err := suite.pgContainer.DB.Exec(query)
 
 	if err != nil {
 		log.Fatal(err)

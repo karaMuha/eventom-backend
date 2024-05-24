@@ -2,9 +2,11 @@ package testutils
 
 import (
 	"context"
+	"database/sql"
 	"path/filepath"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -13,6 +15,7 @@ import (
 type PostgresContainer struct {
 	*postgres.PostgresContainer
 	ConnectionString string
+	*sql.DB
 }
 
 func CreatePostgresContainer(ctx context.Context) (*PostgresContainer, error) {
@@ -37,8 +40,21 @@ func CreatePostgresContainer(ctx context.Context) (*PostgresContainer, error) {
 		return nil, err
 	}
 
+	dbHandler, err := sql.Open("postgres", connStr)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = dbHandler.Ping()
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &PostgresContainer{
 		PostgresContainer: pgContainer,
 		ConnectionString:  connStr,
+		DB:                dbHandler,
 	}, nil
 }
