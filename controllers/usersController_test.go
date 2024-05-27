@@ -19,9 +19,8 @@ import (
 
 type UsersControllerTestSuite struct {
 	suite.Suite
-	ctx         context.Context
-	pgContainer *testutils.PostgresContainer
-	router      *http.ServeMux
+	ctx    context.Context
+	router *http.ServeMux
 }
 
 func TestUsersControllerSuite(t *testing.T) {
@@ -30,15 +29,18 @@ func TestUsersControllerSuite(t *testing.T) {
 
 func (suite *UsersControllerTestSuite) SetupSuite() {
 	suite.ctx = context.Background()
-	pgContainer, err := testutils.CreatePostgresContainer(suite.ctx)
 
-	if err != nil {
-		log.Fatal(err)
+	if testutils.TestContainer == nil {
+		pgContainer, err := testutils.CreatePostgresContainer(suite.ctx)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		testutils.TestContainer = pgContainer
 	}
 
-	suite.pgContainer = pgContainer
-
-	usersRepository := repositories.NewUsersRepository(suite.pgContainer.DB)
+	usersRepository := repositories.NewUsersRepository(testutils.TestContainer.DB)
 	usersService := services.NewUsersService(usersRepository)
 	usersController := NewUsersController(usersService)
 
@@ -54,7 +56,7 @@ func (suite *UsersControllerTestSuite) BeforeTest(suiteName, testName string) {
 	query := `
 		DELETE FROM
 			users`
-	_, err := suite.pgContainer.DB.Exec(query)
+	_, err := testutils.TestContainer.DB.Exec(query)
 
 	if err != nil {
 		log.Fatal(err)
