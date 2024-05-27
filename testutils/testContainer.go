@@ -18,6 +18,8 @@ type PostgresContainer struct {
 	*sql.DB
 }
 
+var TestContainer *PostgresContainer
+
 func CreatePostgresContainer(ctx context.Context) (*PostgresContainer, error) {
 	pgContainer, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:16.2-alpine"),
