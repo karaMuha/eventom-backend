@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ReadEnvFile(filename string) *viper.Viper {
+func ReadEnvFile(environment string) *viper.Viper {
 	config := viper.New()
 
 	config.AddConfigPath(".")
 	config.SetConfigType("env")
-	config.SetConfigName(filename)
+	config.SetConfigName(environment)
 
 	err := config.ReadInConfig()
 	if err != nil {
