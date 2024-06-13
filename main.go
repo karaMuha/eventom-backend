@@ -1,7 +1,6 @@
 package main
 
 import (
-	"eventom-backend/config"
 	"eventom-backend/server"
 	"log"
 	"os"
@@ -12,21 +11,15 @@ import (
 func main() {
 	log.Println("Starting eventom app")
 
-	log.Println("Reading environment variables")
-	appEnvironment := os.Getenv("APP_ENV")
-
-	if appEnvironment == "" {
-		log.Fatal("Could not get app environment")
-	}
-
-	config := config.ReadEnvFile(appEnvironment)
-
 	log.Println("Initializing database")
-	db := server.InitDatabase(config)
+	db := server.ConnectToDb()
 
 	log.Println("Initializinh http server")
-	httpServer := server.InitHttpServer(config, db)
+	httpServer := server.InitHttpServer(db)
 
-	log.Printf("Starting app on port %s", config.GetString("SERVER_PORT"))
-	httpServer.Start()
+	log.Printf("Starting app on port %s", os.Getenv("SERVER_PORT"))
+	err := httpServer.ListenAndServe()
+	if err != nil {
+		log.Fatalf("Error while starting HTTP server: %v", err)
+	}
 }

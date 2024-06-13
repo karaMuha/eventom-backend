@@ -20,6 +20,19 @@ func NewUsersService(usersRepository repositories.UsersRepositoryInterface) User
 }
 
 func (us UsersService) SignupUser(user *models.User) *models.ResponseError {
+	userInDb, responseErr := us.usersRepository.QueryGetUser(user.Email)
+
+	if responseErr != nil {
+		return responseErr
+	}
+
+	if userInDb != nil {
+		return &models.ResponseError{
+			Message: "Email already exists",
+			Status:  http.StatusConflict,
+		}
+	}
+
 	hashedPassword, err := utils.HashPassword(user.Password)
 
 	if err != nil {
@@ -36,21 +49,24 @@ func (us UsersService) GetUser(email string) (*models.User, *models.ResponseErro
 	return us.usersRepository.QueryGetUser(email)
 }
 
-func (us UsersService) ValidateCredentials(user *models.User) (bool, *models.ResponseError) {
+func (us UsersService) LoginUser(user *models.User) (string, *models.ResponseError) {
 	userInDb, responseErr := us.usersRepository.QueryGetUser(user.Email)
 
 	if responseErr != nil {
-		return false, responseErr
+		return "", responseErr
 	}
 
 	if userInDb == nil {
-		return false, nil
+		return "", &models.ResponseError{
+			Message: "No user",
+			Status:  http.StatusUnauthorized,
+		}
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(userInDb.Password), []byte(user.Password))
 
 	if err != nil {
-		return false, &models.ResponseError{
+		return "", &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusUnauthorized,
 		}
@@ -58,5 +74,14 @@ func (us UsersService) ValidateCredentials(user *models.User) (bool, *models.Res
 
 	user.ID = userInDb.ID
 
-	return true, nil
+	token, err := utils.GenerateJwt(user.ID)
+
+	if err != nil {
+		return "", &models.ResponseError{
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	return token, nil
 }

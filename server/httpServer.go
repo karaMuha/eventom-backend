@@ -9,18 +9,12 @@ import (
 	"eventom-backend/utils"
 	"log"
 	"net/http"
-
-	"github.com/spf13/viper"
+	"os"
 )
 
-type HttpServer struct {
-	config *viper.Viper
-	server *http.Server
-}
-
-func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
+func InitHttpServer(db *sql.DB) *http.Server {
 	// initialize private key that is used to sign and verify jwt
-	err := utils.ReadPrivateKeyFromFile(viperConfig.GetString("PRIVATE_KEY_PATH"))
+	err := utils.ReadPrivateKeyFromFile(os.Getenv("PRIVATE_KEY_PATH"))
 	if err != nil {
 		log.Fatalf("Error while reading private key: %v", err)
 	}
@@ -55,20 +49,8 @@ func InitHttpServer(viperConfig *viper.Viper, db *sql.DB) HttpServer {
 	router.HandleFunc("POST /events/{id}", registrationsController.HandleRegisterUserForEvent)
 	router.HandleFunc("DELETE /registrations/{id}", registrationsController.HandleCancleRegistration)
 
-	server := &http.Server{
-		Addr:    viperConfig.GetString("SERVER_PORT"),
+	return &http.Server{
+		Addr:    os.Getenv("SERVER_PORT"),
 		Handler: middlewares.AuthMiddleware(router),
-	}
-
-	return HttpServer{
-		config: viperConfig,
-		server: server,
-	}
-}
-
-func (hs HttpServer) Start() {
-	err := hs.server.ListenAndServe()
-	if err != nil {
-		log.Fatalf("Error while starting HTTP server: %v", err)
 	}
 }
