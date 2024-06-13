@@ -7,5 +7,5 @@ type UsersServiceInterface interface {
 
 	GetUser(email string) (*models.User, *models.ResponseError)
 
-	ValidateCredentials(user *models.User) (bool, *models.ResponseError)
+	LoginUser(user *models.User) (string, *models.ResponseError)
 }

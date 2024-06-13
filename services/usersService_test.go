@@ -35,6 +35,7 @@ func (suite *UsersServiceTestSuite) SetupSuite() {
 		}
 
 		testutils.TestContainer = pgContainer
+		testutils.TestContainer.Container.IsRunning()
 	}
 
 	usersRepository := repositories.NewUsersRepository(testutils.TestContainer.DB)
@@ -53,6 +54,25 @@ func (suite *UsersServiceTestSuite) BeforeTest(suiteName, testName string) {
 	}
 }
 
+func (suite *UsersServiceTestSuite) TestSignupFailUniqueEmail() {
+	user := &models.User{
+		Email:    "test@test.com",
+		Password: "Test123",
+	}
+
+	err := suite.usersService.SignupUser(user)
+	assert.Nil(suite.T(), err)
+
+	userTwo := &models.User{
+		Email:    "test@test.com",
+		Password: "Test123",
+	}
+
+	err = suite.usersService.SignupUser(userTwo)
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), 409, err.Status)
+}
+
 func (suite *UsersServiceTestSuite) TestSignupUserSuccess() {
 	user := &models.User{
 		Email:    "test@test.com",
@@ -69,7 +89,7 @@ func (suite *UsersServiceTestSuite) TestSignupUserSuccess() {
 	assert.NotNil(suite.T(), createdUser.ID)
 }
 
-func (suite *UsersServiceTestSuite) TestValidatePasswordUserNotFound() {
+func (suite *UsersServiceTestSuite) TestLoginUserNotFound() {
 	user := &models.User{
 		Email:    "test@test.com",
 		Password: "Test123",
@@ -83,12 +103,12 @@ func (suite *UsersServiceTestSuite) TestValidatePasswordUserNotFound() {
 	err := suite.usersService.SignupUser(user)
 	assert.Nil(suite.T(), err)
 
-	valid, err := suite.usersService.ValidateCredentials(wrongEmail)
-	assert.Nil(suite.T(), err)
-	assert.False(suite.T(), valid)
+	token, err := suite.usersService.LoginUser(wrongEmail)
+	assert.NotNil(suite.T(), err)
+	assert.Empty(suite.T(), token)
 }
 
-func (suite *UsersServiceTestSuite) TestValidatePasswordWrongPassword() {
+func (suite *UsersServiceTestSuite) TestLogindWrongPassword() {
 	user := &models.User{
 		Email:    "test@test.com",
 		Password: "Test123",
@@ -102,22 +122,8 @@ func (suite *UsersServiceTestSuite) TestValidatePasswordWrongPassword() {
 	err := suite.usersService.SignupUser(user)
 	assert.Nil(suite.T(), err)
 
-	valid, err := suite.usersService.ValidateCredentials(wrongPw)
+	token, err := suite.usersService.LoginUser(wrongPw)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), 401, err.Status)
-	assert.False(suite.T(), valid)
-}
-
-func (suite *UsersServiceTestSuite) TestValidatePasswordSuccess() {
-	user := &models.User{
-		Email:    "test@test.com",
-		Password: "Test123",
-	}
-
-	err := suite.usersService.SignupUser(user)
-	assert.Nil(suite.T(), err)
-
-	valid, err := suite.usersService.ValidateCredentials(user)
-	assert.Nil(suite.T(), err)
-	assert.True(suite.T(), valid)
+	assert.Empty(suite.T(), token)
 }
