@@ -1,0 +1,35 @@
+services:
+  eventom:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      SERVER_PORT: ":8080"
+      DBCONNECTION: "host=postgres port=5432 user=postgres password=postgres dbname=events_db sslmode=disable"
+      DB_DRIVER: "postgres"
+      PRIVATE_KEY_PATH: "id_rsa_priv.pem"
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: postgres
+    image: 'postgres:16.3-alpine'
+    ports:
+      - "5432:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USEER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "events_db"
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data
+      - ./dbScripts/public_schema.sql:/docker-entrypoint-initdb.d/public_schema.sql

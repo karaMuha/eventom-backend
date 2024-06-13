@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"eventom-backend/models"
 	"eventom-backend/services"
-	"eventom-backend/utils"
 	"net/http"
 	"time"
 
@@ -34,18 +33,6 @@ func (uc UsersController) HandleSignupUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	existingUser, responseErr := uc.usersService.GetUser(user.Email)
-
-	if responseErr != nil {
-		http.Error(w, responseErr.Message, responseErr.Status)
-		return
-	}
-
-	if existingUser != nil {
-		http.Error(w, "Email address already exists", http.StatusConflict)
-		return
-	}
-
 	responseErr = uc.usersService.SignupUser(&user)
 
 	if responseErr != nil {
@@ -67,22 +54,10 @@ func (uc UsersController) HandleLoginUser(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	validCredentials, responseErr := uc.usersService.ValidateCredentials(&user)
+	jwtToken, responseErr := uc.usersService.LoginUser(&user)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
-		return
-	}
-
-	if !validCredentials {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	jwtToken, err := utils.GenerateJwt(user.ID)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
