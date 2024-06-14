@@ -1,5 +1,6 @@
 # Eventom
 ## About this app
+With eventom you can create and register for events
 ## How to run the app
 **Prerequisites:**
 - Docker installed (I am running docker desktop version 4.3 on Windows 11)
