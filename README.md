@@ -3,6 +3,7 @@
 ## How to run the app
 **Prerequisites:**
 - Docker installed (I am running docker desktop version 4.3 on Windows 11)
+
 **Installation steps:**
 - Clone the code with `git clone https://github.com/karaMuha/eventom-backend.git`
 - In root dir create the directory `db-data`
