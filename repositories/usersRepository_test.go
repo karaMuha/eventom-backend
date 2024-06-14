@@ -34,7 +34,6 @@ func (suite *UsersRepositoryTestSuite) SetupSuite() {
 		}
 
 		testutils.TestContainer = pgContainer
-		testutils.TestContainer.Container.IsRunning()
 	}
 
 	suite.usersRepository = NewUsersRepository(testutils.TestContainer.DB)
