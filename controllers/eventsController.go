@@ -118,28 +118,9 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	existingEvent, responseErr := ec.eventsService.GetEvent(event.ID)
-
-	if responseErr != nil {
-		http.Error(w, responseErr.Message, responseErr.Status)
-		return
-	}
-
-	if existingEvent == nil {
-		http.Error(w, "Event not found", http.StatusNotFound)
-		return
-	}
-
-	event.UserId = existingEvent.UserId
-
 	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 
-	if event.UserId != userId {
-		http.Error(w, "Not allowed", http.StatusUnauthorized)
-		return
-	}
-
-	responseErr = ec.eventsService.UpdateEvent(&event)
+	responseErr = ec.eventsService.UpdateEvent(userId, &event)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
@@ -151,27 +132,9 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 
 func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Request) {
 	eventId := r.PathValue("id")
-
-	event, responseErr := ec.eventsService.GetEvent(eventId)
-
-	if responseErr != nil {
-		http.Error(w, responseErr.Message, responseErr.Status)
-		return
-	}
-
-	if event == nil {
-		http.Error(w, "Event not found", http.StatusNotFound)
-		return
-	}
-
 	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 
-	if event.UserId != userId {
-		http.Error(w, "Not allowed", http.StatusUnauthorized)
-		return
-	}
-
-	responseErr = ec.eventsService.DeleteEvent(event)
+	responseErr := ec.eventsService.DeleteEvent(userId, eventId)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
