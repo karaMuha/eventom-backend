@@ -16,7 +16,7 @@ type ContextUserId string
 
 const ContextUserIdKey ContextUserId = "userId"
 
-var PrivateKey *rsa.PrivateKey
+var privateKey *rsa.PrivateKey
 var ProtectedRoutes map[string]bool
 
 func HashPassword(password string) (string, error) {
@@ -47,7 +47,7 @@ func ReadPrivateKeyFromFile(filename string) error {
 	}
 
 	data, _ := pem.Decode(buffer)
-	PrivateKey, err = x509.ParsePKCS1PrivateKey(data.Bytes)
+	privateKey, err = x509.ParsePKCS1PrivateKey(data.Bytes)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func GenerateJwt(userId string) (string, error) {
 		"exp":    time.Now().Add(time.Hour).Unix(),
 	})
 
-	return token.SignedString(PrivateKey)
+	return token.SignedString(privateKey)
 }
 
 func VerifyJwt(jwtToken string) (*jwt.Token, error) {
@@ -71,7 +71,7 @@ func VerifyJwt(jwtToken string) (*jwt.Token, error) {
 		if !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return PrivateKey.Public(), nil
+		return privateKey.Public(), nil
 	})
 
 	if err != nil {
@@ -83,6 +83,10 @@ func VerifyJwt(jwtToken string) (*jwt.Token, error) {
 	}
 
 	return parsedToken, nil
+}
+
+func GetPrivateKey() *rsa.PrivateKey {
+	return privateKey
 }
 
 func SetProtectedRoutes() {
