@@ -1,13 +1,20 @@
-FROM golang:1.22-alpine
+FROM golang:1.22-alpine as builder
+
+RUN mkdir /app
+
+COPY . /app
 
 WORKDIR /app
 
-COPY . .
-
-RUN go mod download
-
 RUN go build -o eventom-backend main.go
 
-EXPOSE 8080
+RUN chmod +x /app/eventom-backend
 
-CMD ["/app/eventom-backend"]
+# build tiny docker image
+FROM alpine:latest
+
+RUN mkdir /app
+
+COPY --from=builder /app/eventom-backend /app/id_rsa_priv.pem /app/
+
+CMD [ "/app/eventom-backend" ]

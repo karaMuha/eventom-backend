@@ -7,20 +7,26 @@ import (
 
 type RegistrationsService struct {
 	registrationsRepository repositories.RegistrationsRepositoryInterface
+	transactionHandler      repositories.TransactionHandler
 }
 
-func NewRegistrationsService(registrationsRepository repositories.RegistrationsRepositoryInterface) RegistrationsServiceInterface {
+func NewRegistrationsService(registrationsRepository repositories.RegistrationsRepositoryInterface, transactionHandler repositories.TransactionHandler) RegistrationsServiceInterface {
 	return &RegistrationsService{
 		registrationsRepository: registrationsRepository,
+		transactionHandler:      transactionHandler,
 	}
 }
 
 func (rs RegistrationsService) RegisterUserForEvent(eventId string, userId string) (*models.Registration, *models.ResponseError) {
-	return rs.registrationsRepository.QueryRegisterUserForEvent(eventId, userId)
+	return rs.transactionHandler.ExecTx(eventId, userId)
 }
 
 func (rs RegistrationsService) GetRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError) {
 	return rs.registrationsRepository.QueryGetRegistration(eventId, userId)
+}
+
+func (rs RegistrationsService) GetAllRegistration() ([]*models.Registration, *models.ResponseError) {
+	return rs.registrationsRepository.QueryGetAllRegistrations()
 }
 
 func (rs RegistrationsService) CancelRegistration(registrationId string) *models.ResponseError {

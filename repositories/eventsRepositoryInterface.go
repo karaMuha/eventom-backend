@@ -11,5 +11,7 @@ type EventsRepositoryInterface interface {
 
 	QueryUpdateEvent(event *models.Event) *models.ResponseError
 
+	QueryIncrementAmountRegistrations(eventId string) (*models.Event, *models.ResponseError)
+
 	QueryDeleteEvent(eventId string) *models.ResponseError
 }

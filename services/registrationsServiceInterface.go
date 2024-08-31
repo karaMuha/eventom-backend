@@ -7,5 +7,7 @@ type RegistrationsServiceInterface interface {
 
 	GetRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError)
 
+	GetAllRegistration() ([]*models.Registration, *models.ResponseError)
+
 	CancelRegistration(registrationId string) *models.ResponseError
 }
