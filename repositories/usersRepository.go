@@ -16,7 +16,7 @@ func NewUsersRepository(db *sql.DB) UsersRepositoryInterface {
 	}
 }
 
-func (ur UsersRepository) QuerySignupUser(email string, hashedPassword string) *models.ResponseError {
+func (ur *UsersRepository) QuerySignupUser(email string, hashedPassword string) *models.ResponseError {
 	query := `
 		INSERT INTO
 			users(email, password)
@@ -34,7 +34,7 @@ func (ur UsersRepository) QuerySignupUser(email string, hashedPassword string) *
 	return nil
 }
 
-func (ur UsersRepository) QueryGetUser(email string) (*models.User, *models.ResponseError) {
+func (ur *UsersRepository) QueryGetUser(email string) (*models.User, *models.ResponseError) {
 	query := `
 		SELECT
 			*

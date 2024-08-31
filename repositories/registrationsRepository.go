@@ -3,20 +3,21 @@ package repositories
 import (
 	"database/sql"
 	"eventom-backend/models"
+	"log"
 	"net/http"
 )
 
 type RegistrationsRepository struct {
-	db *sql.DB
+	db DBTX
 }
 
-func NewRegistrationsRepository(db *sql.DB) RegistrationsRepositoryInterface {
+func NewRegistrationsRepository(db DBTX) RegistrationsRepositoryInterface {
 	return &RegistrationsRepository{
 		db: db,
 	}
 }
 
-func (rr RegistrationsRepository) QueryGetRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError) {
+func (rr *RegistrationsRepository) QueryGetRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError) {
 	query := `
 		SELECT
 			*
@@ -44,6 +45,53 @@ func (rr RegistrationsRepository) QueryGetRegistration(eventId string, userId st
 	return &registration, nil
 }
 
+func (rr *RegistrationsRepository) QueryGetAllRegistrations() ([]*models.Registration, *models.ResponseError) {
+	query := `
+		SELECT
+			*
+		FROM
+			registrations`
+	rows, err := rr.db.Query(query)
+
+	if err != nil {
+		return nil, &models.ResponseError{
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	defer rows.Close()
+
+	registrationsList := make([]*models.Registration, 0)
+	var registrationId, eventId, userId string
+
+	for rows.Next() {
+		err = rows.Scan(&registrationId, &eventId, &userId)
+		if err != nil {
+			return nil, &models.ResponseError{
+				Message: err.Error(),
+				Status:  http.StatusInternalServerError,
+			}
+		}
+		registration := &models.Registration{
+			ID:      registrationId,
+			EventId: eventId,
+			UserId:  userId,
+		}
+		registrationsList = append(registrationsList, registration)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, &models.ResponseError{
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	return registrationsList, nil
+}
+
 func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, userId string) (*models.Registration, *models.ResponseError) {
 	query := `
 		INSERT INTO
@@ -58,6 +106,7 @@ func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, use
 	err := row.Scan(&registrationId)
 
 	if err != nil {
+		log.Println(err.Error())
 		return nil, &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
