@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS events (
   event_description text NOT NULL,
   event_location text NOT NULL,
   event_date date NOT NULL,
+  max_capacity integer NOT NULL,
+  amount_registrations integer DEFAULT 0,
   user_id uuid NOT NULL,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );

@@ -92,3 +92,23 @@ func (rc RegistrationsController) HandleCancleRegistration(w http.ResponseWriter
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func (rc RegistrationsController) HandleGetAllRegistrations(w http.ResponseWriter, r *http.Request) {
+	registrationsList, responseErr := rc.registrationsService.GetAllRegistration()
+
+	if responseErr != nil {
+		http.Error(w, responseErr.Message, responseErr.Status)
+		return
+	}
+
+	responseJson, err := json.Marshal(&registrationsList)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(responseJson)
+}

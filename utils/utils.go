@@ -90,7 +90,7 @@ func GetPrivateKey() *rsa.PrivateKey {
 }
 
 func SetProtectedRoutes() {
-	ProtectedRoutes = make(map[string]bool, 7)
+	ProtectedRoutes = make(map[string]bool, 8)
 	ProtectedRoutes["POST events"] = true
 	ProtectedRoutes["GET events"] = false
 	ProtectedRoutes["PUT events"] = true
@@ -98,5 +98,6 @@ func SetProtectedRoutes() {
 	ProtectedRoutes["POST signup"] = false
 	ProtectedRoutes["POST login"] = false
 	ProtectedRoutes["POST logout"] = true
+	ProtectedRoutes["GET registrations"] = false
 	ProtectedRoutes["DELETE registrations"] = true
 }
