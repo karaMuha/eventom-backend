@@ -12,5 +12,5 @@ type Event struct {
 	Date               time.Time `json:"date" validate:"required"`
 	MaxCapacity        int       `json:"max_capacity" validate:"required,gte=1"`
 	AmountRegistration int       `json:"amount_registrations"`
-	UserId             string    `json:"userId"`
+	UserId             string    `json:"user_id"`
 }
