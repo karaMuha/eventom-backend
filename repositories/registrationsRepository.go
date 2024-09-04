@@ -137,3 +137,5 @@ func (rr *RegistrationsRepository) QueryCancelRegistration(registrationId string
 
 	return nil
 }
+
+var _ RegistrationsRepositoryInterface = (*RegistrationsRepository)(nil)
