@@ -31,7 +31,13 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	userId := r.Context().Value(utils.ContextUserIdKey).(string)
+	userId, ok := r.Context().Value(utils.ContextUserIdKey).(string)
+
+	if !ok {
+		http.Error(w, "Could not convert user id from token to a string", http.StatusInternalServerError)
+		return
+	}
+
 	event.UserId = userId
 	err = ec.validator.Struct(&event)
 
@@ -69,11 +75,6 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if event == nil {
-		http.Error(w, "Event not found", http.StatusNotFound)
-		return
-	}
-
 	responseJson, err := json.Marshal(&event)
 
 	if err != nil {
@@ -94,7 +95,7 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	responseJson, err := json.Marshal(&eventsList)
+	responseJson, err := json.Marshal(eventsList)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -120,14 +121,23 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 
 	userId := r.Context().Value(utils.ContextUserIdKey).(string)
 
-	responseErr = ec.eventsService.UpdateEvent(userId, &event)
+	updatedEvent, responseErr := ec.eventsService.UpdateEvent(userId, &event)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
 
+	responseJson, err := json.Marshal(updatedEvent)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	w.Write(responseJson)
 }
 
 func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Request) {

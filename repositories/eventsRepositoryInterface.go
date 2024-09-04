@@ -9,7 +9,7 @@ type EventsRepositoryInterface interface {
 
 	QueryGetAllEvents() ([]*models.Event, *models.ResponseError)
 
-	QueryUpdateEvent(event *models.Event) *models.ResponseError
+	QueryUpdateEvent(event *models.Event) (*models.Event, *models.ResponseError)
 
 	QueryIncrementAmountRegistrations(eventId string) (*models.Event, *models.ResponseError)
 

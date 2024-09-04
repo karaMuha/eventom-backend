@@ -3,14 +3,16 @@ package repositories
 import (
 	"database/sql"
 	"eventom-backend/models"
+	"log"
 	"net/http"
+	"strings"
 )
 
 type UsersRepository struct {
 	db *sql.DB
 }
 
-func NewUsersRepository(db *sql.DB) UsersRepositoryInterface {
+func NewUsersRepository(db *sql.DB) *UsersRepository {
 	return &UsersRepository{
 		db: db,
 	}
@@ -25,6 +27,13 @@ func (ur *UsersRepository) QuerySignupUser(email string, hashedPassword string) 
 	_, err := ur.db.Exec(query, email, hashedPassword)
 
 	if err != nil {
+		log.Println(err.Error())
+		if strings.Contains(err.Error(), "unique constraint") {
+			return &models.ResponseError{
+				Message: "Email already registered",
+				Status:  http.StatusConflict,
+			}
+		}
 		return &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
@@ -49,7 +58,10 @@ func (ur *UsersRepository) QueryGetUser(email string) (*models.User, *models.Res
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, &models.ResponseError{
+				Message: "User not found",
+				Status:  http.StatusNotFound,
+			}
 		}
 		return nil, &models.ResponseError{
 			Message: err.Error(),
@@ -59,3 +71,5 @@ func (ur *UsersRepository) QueryGetUser(email string) (*models.User, *models.Res
 
 	return &user, nil
 }
+
+var _ UsersRepositoryInterface = (*UsersRepository)(nil)

@@ -3,7 +3,6 @@ package repositories
 import (
 	"database/sql"
 	"eventom-backend/models"
-	"log"
 	"net/http"
 	"time"
 )
@@ -12,7 +11,7 @@ type EventsRepository struct {
 	db DBTX
 }
 
-func NewEventsRepository(db DBTX) EventsRepositoryInterface {
+func NewEventsRepository(db DBTX) *EventsRepository {
 	return &EventsRepository{
 		db: db,
 	}
@@ -62,9 +61,11 @@ func (er *EventsRepository) QueryGetEvent(eventId string) (*models.Event, *model
 	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.Date, &event.MaxCapacity, &event.AmountRegistration, &event.UserId)
 
 	if err != nil {
-		log.Println(err.Error())
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, &models.ResponseError{
+				Message: "Event not found",
+				Status:  http.StatusNotFound,
+			}
 		}
 		return nil, &models.ResponseError{
 			Message: err.Error(),
@@ -129,7 +130,7 @@ func (er *EventsRepository) QueryGetAllEvents() ([]*models.Event, *models.Respon
 	return eventsList, nil
 }
 
-func (er *EventsRepository) QueryUpdateEvent(event *models.Event) *models.ResponseError {
+func (er *EventsRepository) QueryUpdateEvent(event *models.Event) (*models.Event, *models.ResponseError) {
 	query := `
 		UPDATE
 			events
@@ -139,17 +140,37 @@ func (er *EventsRepository) QueryUpdateEvent(event *models.Event) *models.Respon
 			event_location = $3,
 			event_date = $4
 		WHERE
-			id = $5`
-	_, err := er.db.Exec(query, event.Name, event.Description, event.Location, event.Date, event.ID)
+			id = $5
+		RETURNING
+			*`
+	row := er.db.QueryRow(query, event.Name, event.Description, event.Location, event.Date, event.ID)
+
+	var updatedEvent models.Event
+	err := row.Scan(
+		&updatedEvent.ID,
+		&updatedEvent.Name,
+		&updatedEvent.Description,
+		&updatedEvent.Location,
+		&updatedEvent.Date,
+		&updatedEvent.MaxCapacity,
+		&updatedEvent.AmountRegistration,
+		&updatedEvent.UserId,
+	)
 
 	if err != nil {
-		return &models.ResponseError{
+		if err == sql.ErrNoRows {
+			return nil, &models.ResponseError{
+				Message: "Event not found",
+				Status:  http.StatusNotFound,
+			}
+		}
+		return nil, &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
 		}
 	}
 
-	return nil
+	return &updatedEvent, nil
 }
 
 func (er *EventsRepository) QueryIncrementAmountRegistrations(eventId string) (*models.Event, *models.ResponseError) {
@@ -194,3 +215,5 @@ func (er *EventsRepository) QueryDeleteEvent(eventId string) *models.ResponseErr
 
 	return nil
 }
+
+var _ EventsRepositoryInterface = (*EventsRepository)(nil)
