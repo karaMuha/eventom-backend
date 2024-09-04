@@ -47,12 +47,18 @@ func ReadPrivateKeyFromFile(filename string) error {
 	}
 
 	data, _ := pem.Decode(buffer)
-	privateKey, err = x509.ParsePKCS1PrivateKey(data.Bytes)
+	key, err := x509.ParsePKCS8PrivateKey(data.Bytes)
+
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if key, ok := key.(*rsa.PrivateKey); ok {
+		privateKey = key
+		return nil
+	}
+
+	return errors.New("error while reading private key")
 }
 
 func GenerateJwt(userId string) (string, error) {
