@@ -11,7 +11,7 @@ type RegistrationsRepository struct {
 	db DBTX
 }
 
-func NewRegistrationsRepository(db DBTX) RegistrationsRepositoryInterface {
+func NewRegistrationsRepository(db DBTX) *RegistrationsRepository {
 	return &RegistrationsRepository{
 		db: db,
 	}
@@ -120,15 +120,17 @@ func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, use
 	}, nil
 }
 
-func (rr *RegistrationsRepository) QueryCancelRegistration(registrationId string) (*models.Registration, *models.ResponseError) {
+func (rr *RegistrationsRepository) QueryCancelRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError) {
 	query := `
 		DELETE FROM
 			registrations
 		WHERE
-			id := $1
+			event_id = $1
+			AND
+			user_id = $2
 		RETURNING
 			*`
-	row := rr.db.QueryRow(query, registrationId)
+	row := rr.db.QueryRow(query, eventId, userId)
 	var deletedRegistration models.Registration
 
 	err := row.Scan(

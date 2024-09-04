@@ -73,21 +73,14 @@ func (rc RegistrationsController) HandleRegisterUserForEvent(w http.ResponseWrit
 
 func (rc RegistrationsController) HandleCancleRegistration(w http.ResponseWriter, r *http.Request) {
 	eventId := r.PathValue("id")
-	userId := r.Context().Value(utils.ContextUserIdKey).(string)
+	userId, ok := r.Context().Value(utils.ContextUserIdKey).(string)
 
-	registration, responseErr := rc.registrationsService.GetRegistration(eventId, userId)
-
-	if responseErr != nil {
-		http.Error(w, responseErr.Message, responseErr.Status)
+	if !ok {
+		http.Error(w, "Could not convert user id from token to a string", http.StatusInternalServerError)
 		return
 	}
 
-	if registration == nil {
-		http.Error(w, "Registration not found", http.StatusNotFound)
-		return
-	}
-
-	_, responseErr = rc.registrationsService.CancelRegistration(registration.ID)
+	_, responseErr := rc.registrationsService.CancelRegistration(eventId, userId)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
