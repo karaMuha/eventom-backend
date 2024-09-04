@@ -120,22 +120,37 @@ func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, use
 	}, nil
 }
 
-func (rr *RegistrationsRepository) QueryCancelRegistration(registrationId string) *models.ResponseError {
+func (rr *RegistrationsRepository) QueryCancelRegistration(registrationId string) (*models.Registration, *models.ResponseError) {
 	query := `
 		DELETE FROM
 			registrations
 		WHERE
-			id := $1`
-	_, err := rr.db.Exec(query, registrationId)
+			id := $1
+		RETURNING
+			*`
+	row := rr.db.QueryRow(query, registrationId)
+	var deletedRegistration models.Registration
+
+	err := row.Scan(
+		&deletedRegistration.ID,
+		&deletedRegistration.EventId,
+		&deletedRegistration.UserId,
+	)
 
 	if err != nil {
-		return &models.ResponseError{
+		if err == sql.ErrNoRows {
+			return nil, &models.ResponseError{
+				Message: "Registration not found",
+				Status:  http.StatusNotFound,
+			}
+		}
+		return nil, &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
 		}
 	}
 
-	return nil
+	return &deletedRegistration, nil
 }
 
 var _ RegistrationsRepositoryInterface = (*RegistrationsRepository)(nil)

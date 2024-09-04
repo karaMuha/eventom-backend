@@ -87,7 +87,7 @@ func (rc RegistrationsController) HandleCancleRegistration(w http.ResponseWriter
 		return
 	}
 
-	responseErr = rc.registrationsService.CancelRegistration(registration.ID)
+	_, responseErr = rc.registrationsService.CancelRegistration(registration.ID)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
