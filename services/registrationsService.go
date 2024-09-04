@@ -29,7 +29,7 @@ func (rs RegistrationsService) GetAllRegistration() ([]*models.Registration, *mo
 	return rs.registrationsRepository.QueryGetAllRegistrations()
 }
 
-func (rs RegistrationsService) CancelRegistration(registrationId string) *models.ResponseError {
+func (rs RegistrationsService) CancelRegistration(registrationId string) (*models.Registration, *models.ResponseError) {
 	return rs.registrationsRepository.QueryCancelRegistration(registrationId)
 }
 
