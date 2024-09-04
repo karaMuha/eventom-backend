@@ -3,15 +3,15 @@ package repositories
 import (
 	"database/sql"
 	"eventom-backend/models"
-	"log"
 	"net/http"
+	"strings"
 )
 
 type RegistrationsRepository struct {
 	db DBTX
 }
 
-func NewRegistrationsRepository(db DBTX) RegistrationsRepositoryInterface {
+func NewRegistrationsRepository(db DBTX) *RegistrationsRepository {
 	return &RegistrationsRepository{
 		db: db,
 	}
@@ -106,7 +106,12 @@ func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, use
 	err := row.Scan(&registrationId)
 
 	if err != nil {
-		log.Println(err.Error())
+		if strings.Contains(err.Error(), "unique constraint") {
+			return nil, &models.ResponseError{
+				Message: "User is already registered for this event",
+				Status:  http.StatusConflict,
+			}
+		}
 		return nil, &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
@@ -120,15 +125,17 @@ func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, use
 	}, nil
 }
 
-func (rr *RegistrationsRepository) QueryCancelRegistration(registrationId string) (*models.Registration, *models.ResponseError) {
+func (rr *RegistrationsRepository) QueryCancelRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError) {
 	query := `
 		DELETE FROM
 			registrations
 		WHERE
-			id := $1
+			event_id = $1
+			AND
+			user_id = $2
 		RETURNING
 			*`
-	row := rr.db.QueryRow(query, registrationId)
+	row := rr.db.QueryRow(query, eventId, userId)
 	var deletedRegistration models.Registration
 
 	err := row.Scan(

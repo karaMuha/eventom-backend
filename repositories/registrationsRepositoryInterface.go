@@ -9,5 +9,5 @@ type RegistrationsRepositoryInterface interface {
 
 	QueryGetAllRegistrations() ([]*models.Registration, *models.ResponseError)
 
-	QueryCancelRegistration(registrationId string) (*models.Registration, *models.ResponseError)
+	QueryCancelRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError)
 }

@@ -27,5 +27,6 @@ CREATE TABLE IF NOT EXISTS registrations (
   event_id uuid,
   user_id uuid,
   FOREIGN KEY(event_id) REFERENCES events(id),
-  FOREIGN KEY(user_id) REFERENCES users(id)
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  UNIQUE(event_id, user_id)
 );

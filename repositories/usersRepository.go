@@ -3,7 +3,6 @@ package repositories
 import (
 	"database/sql"
 	"eventom-backend/models"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -27,7 +26,6 @@ func (ur *UsersRepository) QuerySignupUser(email string, hashedPassword string) 
 	_, err := ur.db.Exec(query, email, hashedPassword)
 
 	if err != nil {
-		log.Println(err.Error())
 		if strings.Contains(err.Error(), "unique constraint") {
 			return &models.ResponseError{
 				Message: "Email already registered",

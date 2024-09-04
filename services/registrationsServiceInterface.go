@@ -9,5 +9,5 @@ type RegistrationsServiceInterface interface {
 
 	GetAllRegistration() ([]*models.Registration, *models.ResponseError)
 
-	CancelRegistration(registrationId string) (*models.Registration, *models.ResponseError)
+	CancelRegistration(eventId string, userId string) (*models.Registration, *models.ResponseError)
 }
