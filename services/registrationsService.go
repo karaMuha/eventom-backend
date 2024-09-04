@@ -10,7 +10,7 @@ type RegistrationsService struct {
 	transactionHandler      repositories.TransactionHandler
 }
 
-func NewRegistrationsService(registrationsRepository repositories.RegistrationsRepositoryInterface, transactionHandler repositories.TransactionHandler) RegistrationsServiceInterface {
+func NewRegistrationsService(registrationsRepository repositories.RegistrationsRepositoryInterface, transactionHandler repositories.TransactionHandler) *RegistrationsService {
 	return &RegistrationsService{
 		registrationsRepository: registrationsRepository,
 		transactionHandler:      transactionHandler,
@@ -32,3 +32,5 @@ func (rs RegistrationsService) GetAllRegistration() ([]*models.Registration, *mo
 func (rs RegistrationsService) CancelRegistration(registrationId string) *models.ResponseError {
 	return rs.registrationsRepository.QueryCancelRegistration(registrationId)
 }
+
+var _ RegistrationsServiceInterface = (*RegistrationsService)(nil)

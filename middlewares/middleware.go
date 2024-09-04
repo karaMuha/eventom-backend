@@ -33,8 +33,20 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// extract user id from token for further usage
-		claims, _ := verifiedToken.Claims.(jwt.MapClaims)
-		userId := claims["userId"].(string)
+		claims, ok := verifiedToken.Claims.(jwt.MapClaims)
+
+		if !ok {
+			http.Error(w, "Could not convert jwt claims", http.StatusInternalServerError)
+			return
+		}
+
+		userId, ok := claims["user_id"].(string)
+
+		if !ok {
+			http.Error(w, "Could not convert user id from jwt claims to string", http.StatusInternalServerError)
+			return
+		}
+
 		ctx := context.WithValue(r.Context(), utils.ContextUserIdKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -13,25 +13,13 @@ type UsersService struct {
 	usersRepository repositories.UsersRepositoryInterface
 }
 
-func NewUsersService(usersRepository repositories.UsersRepositoryInterface) UsersServiceInterface {
+func NewUsersService(usersRepository repositories.UsersRepositoryInterface) *UsersService {
 	return &UsersService{
 		usersRepository: usersRepository,
 	}
 }
 
 func (us UsersService) SignupUser(user *models.User) *models.ResponseError {
-	userInDb, responseErr := us.usersRepository.QueryGetUser(user.Email)
-
-	if responseErr != nil {
-		return responseErr
-	}
-
-	if userInDb != nil {
-		return &models.ResponseError{
-			Message: "Email already exists",
-			Status:  http.StatusConflict,
-		}
-	}
 
 	hashedPassword, err := utils.HashPassword(user.Password)
 
@@ -56,13 +44,6 @@ func (us UsersService) LoginUser(user *models.User) (string, *models.ResponseErr
 		return "", responseErr
 	}
 
-	if userInDb == nil {
-		return "", &models.ResponseError{
-			Message: "No user",
-			Status:  http.StatusUnauthorized,
-		}
-	}
-
 	err := bcrypt.CompareHashAndPassword([]byte(userInDb.Password), []byte(user.Password))
 
 	if err != nil {
@@ -85,3 +66,5 @@ func (us UsersService) LoginUser(user *models.User) (string, *models.ResponseErr
 
 	return token, nil
 }
+
+var _ UsersServiceInterface = (*UsersService)(nil)

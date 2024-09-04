@@ -24,19 +24,23 @@ func NewRegistrationsController(registrationsService services.RegistrationsServi
 
 func (rc RegistrationsController) HandleRegisterUserForEvent(w http.ResponseWriter, r *http.Request) {
 	var registration models.Registration
-	eventId := r.PathValue("id")
-	userId := r.Context().Value(utils.ContextUserIdKey).(string)
-
-	registration.EventId = eventId
-	registration.UserId = userId
-	err := rc.validator.Struct(&registration)
+	err := json.NewDecoder(r.Body).Decode(&registration)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	existingEvent, responseErr := rc.registrationsService.GetRegistration(eventId, userId)
+	userId := r.Context().Value(utils.ContextUserIdKey).(string)
+	registration.UserId = userId
+	err = rc.validator.Struct(&registration)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	existingEvent, responseErr := rc.registrationsService.GetRegistration(registration.EventId, userId)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)

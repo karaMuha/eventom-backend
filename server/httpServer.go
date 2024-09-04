@@ -49,7 +49,7 @@ func InitHttpServer(db *sql.DB) *http.Server {
 	router.HandleFunc("POST /login", usersController.HandleLoginUser)
 	router.HandleFunc("POST /logout", usersController.HandleLogoutUser)
 
-	router.HandleFunc("POST /events/{id}", registrationsController.HandleRegisterUserForEvent)
+	router.HandleFunc("POST /registrations", registrationsController.HandleRegisterUserForEvent)
 	router.HandleFunc("GET /registrations", registrationsController.HandleGetAllRegistrations)
 	router.HandleFunc("DELETE /registrations/{id}", registrationsController.HandleCancleRegistration)
 
