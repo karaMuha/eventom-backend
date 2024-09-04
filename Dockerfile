@@ -15,6 +15,6 @@ FROM alpine:latest
 
 RUN mkdir /app
 
-COPY --from=builder /app/eventom-backend /app/id_rsa_priv.pem /app/
+COPY --from=builder /app/eventom-backend /app/private-key.pem /app/
 
 CMD [ "/app/eventom-backend" ]

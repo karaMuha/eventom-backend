@@ -13,7 +13,7 @@ services:
       SERVER_PORT: ":8080"
       DBCONNECTION: "host=postgres port=5432 user=postgres password=postgres dbname=events_db sslmode=disable"
       DB_DRIVER: "postgres"
-      PRIVATE_KEY_PATH: "id_rsa_priv.pem"
+      PRIVATE_KEY_PATH: "private-key.pem"
     depends_on:
       - postgres
 
