@@ -40,18 +40,6 @@ func (rc RegistrationsController) HandleRegisterUserForEvent(w http.ResponseWrit
 		return
 	}
 
-	existingEvent, responseErr := rc.registrationsService.GetRegistration(registration.EventId, userId)
-
-	if responseErr != nil {
-		http.Error(w, responseErr.Message, responseErr.Status)
-		return
-	}
-
-	if existingEvent != nil {
-		http.Error(w, "User is already registered for this event", http.StatusConflict)
-		return
-	}
-
 	createdRegistration, responseErr := rc.registrationsService.RegisterUserForEvent(registration.EventId, registration.UserId)
 
 	if responseErr != nil {

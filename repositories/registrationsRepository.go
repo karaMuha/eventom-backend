@@ -3,8 +3,8 @@ package repositories
 import (
 	"database/sql"
 	"eventom-backend/models"
-	"log"
 	"net/http"
+	"strings"
 )
 
 type RegistrationsRepository struct {
@@ -106,7 +106,12 @@ func (rr *RegistrationsRepository) QueryRegisterUserForEvent(eventId string, use
 	err := row.Scan(&registrationId)
 
 	if err != nil {
-		log.Println(err.Error())
+		if strings.Contains(err.Error(), "unique constraint") {
+			return nil, &models.ResponseError{
+				Message: "User is already registered for this event",
+				Status:  http.StatusConflict,
+			}
+		}
 		return nil, &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
