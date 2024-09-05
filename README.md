@@ -28,7 +28,7 @@ The entry point of this app is `main.go`. On start up the app will try to connec
     "password": "test123"
 }
 ```
-- POST /events -> create an event with an event name, location, date, and max capacity
+- (protected) POST /events -> create an event with an event name, location, date, and max capacity
 ```
 {
     "name": "Test",
@@ -39,17 +39,17 @@ The entry point of this app is `main.go`. On start up the app will try to connec
 ```
 - GET /events/{id} -> get event with given event id
 - GET /events -> list all events
-- PUT /events/{id} -> update event with given event id
-- DELETE /events/{id} -> delete event with given event id
+- (protected) PUT /events/{id} -> update event with given event id. User can only update events created by himself
+- DELETE /events/{id} -> delete event with given event id. User can only delete events created by himself
 
-- POST /registrations -> register for an event. Provide event id in request body, user id will be extraced from jwt
+- POST (protected) /registrations -> register for an event. Provide event id in request body, user id will be extraced from jwt
 ```
 {
     "event_id": {id}
 }
 ```
 - GET /registrations -> list all registration (will be refactored to list all registrations of logged in user)
-- DELETE /registrations/{id} -> cancel registration with given registration id
+- DELETE (protected) /registrations/{id} -> cancel registration with given registration id. User can only cancel his own registrations
 
 ## ToDos
 - finish registration cancellation logic
