@@ -29,14 +29,27 @@ func (th *TransactionHandler) ExecTx(evntId string, userId string) (*models.Regi
 	registrationsRepository := NewRegistrationsRepository(tx)
 	eventsRepository := NewEventsRepository(tx)
 
-	registration, responseErr := registrationsRepository.QueryRegisterUserForEvent(evntId, userId)
+	event, responseErr := eventsRepository.QueryIncrementAmountRegistrations(evntId)
 
 	if responseErr != nil {
 		tx.Rollback()
 		return nil, responseErr
 	}
 
+	if event.AmountRegistration > event.MaxCapacity {
+		tx.Rollback()
+		return nil, &models.ResponseError{
+			Message: "Event is full",
+			Status:  http.StatusConflict,
+		}
+	}
 
+	registration, responseErr := registrationsRepository.QueryRegisterUserForEvent(evntId, userId)
+
+	if responseErr != nil {
+		tx.Rollback()
+		return nil, responseErr
+	}
 
 	_ = tx.Commit()
 

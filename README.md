@@ -13,10 +13,49 @@ With eventom you can create and register for events
 
 The entry point of this app is `main.go`. On start up the app will try to connect to the postgres container `dbServer.go in package server`. Since postgres might need some time to be ready to accept requests, this app will try to establish a connection in an interval of 5 seconds for 10 times at max and crash if a connection to postgres cannot be established. After a connection to postgres has been established successfully, the http server will be initialized `httpServer.go in package server`. The http server initializes the logic layers (repositories, services, controllers and middleware) and the routes. Then the server starts and listens on the specified port (see `docker-compose.yaml`)
 
+## Usage
+- POST /signup -> signup as a user with your email and a password
+```
+{
+    "email": "test@test.com",
+    "password": "test123"
+}
+```
+- POST /login -> login with you signed up user to get a jwt
+```
+{
+    "email": "test@test.com",
+    "password": "test123"
+}
+```
+- POST /events -> create an event with an event name, location, date, and max capacity
+```
+{
+    "name": "Test",
+    "location": "Köln",
+    "date": "1994-10-27T21:00:00Z",
+    "max_capacity": 3
+}
+```
+- GET /events/{id} -> get event with given event id
+- GET /events -> list all events
+- PUT /events/{id} -> update event with given event id
+- DELETE /events/{id} -> delete event with given event id
+
+- POST /registrations -> register for an event. Provide event id in request body, user id will be extraced from jwt
+```
+{
+    "event_id": {id}
+}
+```
+- GET /registrations -> list all registration (will be refactored to list all registrations of logged in user)
+- DELETE /registrations/{id} -> cancel registration with given registration id
+
 ## ToDos
-- Finish registration cancellation logic
+- finish registration cancellation logic
 - cancel registrations when event is deleted
-- Provide tests for events and registrations logic
-- Provide tests for transaction handler
+- provide tests for events and registrations logic
+- provide tests for transaction handler
 - implement purchasable events (using [kara-bank](https://github.com/karaMuha/kara-bank) for payment)
 - implement RBAC
+- filter for events (e.g. location, price, free capacity)
