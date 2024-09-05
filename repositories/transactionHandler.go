@@ -18,8 +18,6 @@ func NewTxHandler(db *sql.DB) *TransactionHandler {
 
 func (th *TransactionHandler) ExecTx(evntId string, userId string) (*models.Registration, *models.ResponseError) {
 	tx, err := th.db.Begin()
-	registrationsRepository := NewRegistrationsRepository(tx)
-	eventsRepository := NewEventsRepository(tx)
 
 	if err != nil {
 		return nil, &models.ResponseError{
@@ -28,12 +26,8 @@ func (th *TransactionHandler) ExecTx(evntId string, userId string) (*models.Regi
 		}
 	}
 
-	registration, responseErr := registrationsRepository.QueryRegisterUserForEvent(evntId, userId)
-
-	if responseErr != nil {
-		tx.Rollback()
-		return nil, responseErr
-	}
+	registrationsRepository := NewRegistrationsRepository(tx)
+	eventsRepository := NewEventsRepository(tx)
 
 	event, responseErr := eventsRepository.QueryIncrementAmountRegistrations(evntId)
 
@@ -48,6 +42,13 @@ func (th *TransactionHandler) ExecTx(evntId string, userId string) (*models.Regi
 			Message: "Event is full",
 			Status:  http.StatusConflict,
 		}
+	}
+
+	registration, responseErr := registrationsRepository.QueryRegisterUserForEvent(evntId, userId)
+
+	if responseErr != nil {
+		tx.Rollback()
+		return nil, responseErr
 	}
 
 	_ = tx.Commit()
