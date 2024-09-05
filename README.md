@@ -17,3 +17,4 @@ The entry point of this app is `main.go`. On start up the app will try to connec
 - Finish registration cancellation logic
 - Provide tests for events and registrations logic
 - implement purchasable events (using [kara-bank](https://github.com/karaMuha/kara-bank) for payment)
+- implement RBAC
