@@ -76,15 +76,18 @@ func (er *EventsRepository) QueryGetEvent(eventId string) (*models.Event, *model
 	return &event, nil
 }
 
-func (er *EventsRepository) QueryGetAllEvents(eventLocation string) ([]*models.Event, *models.ResponseError) {
+func (er *EventsRepository) QueryGetAllEvents(eventLocation string, freeCapacity int) ([]*models.Event, *models.ResponseError) {
+	// TODO: checkout squirrel for conditional query building on runtime so the query only has the parts it needs to run. That might improve caching performance
 	query := `
 		SELECT
 			*
 		FROM
 			events
 		WHERE
-			(event_location = $1 OR $1 = '')`
-	rows, err := er.db.Query(query, eventLocation)
+			(event_location = $1 OR $1 = '')
+			AND
+			(((max_capacity - amount_registrations) >= $2 AND $2 != 0) OR $2 = 0)`
+	rows, err := er.db.Query(query, eventLocation, freeCapacity)
 
 	if err != nil {
 		return nil, &models.ResponseError{
