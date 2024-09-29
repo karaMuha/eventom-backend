@@ -56,6 +56,5 @@ The entry point of this app is `main.go`. On start up the app will try to connec
 - cancel registrations when event is deleted
 - provide tests for events and registrations logic
 - provide tests for transaction handler
-- implement purchasable events (using [kara-bank](https://github.com/karaMuha/kara-bank) for payment)
+- implement purchasable events (using [kara-bank](https://github.com/karaMuha/kara-bank) for payment and expand filtering capability to include price filtering)
 - implement RBAC
-- filter for events (e.g. location, price, free capacity)
