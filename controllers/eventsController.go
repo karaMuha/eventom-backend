@@ -88,7 +88,8 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 }
 
 func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Request) {
-	eventsList, responseErr := ec.eventsService.GetAllEvents()
+	location := r.URL.Query().Get("location")
+	eventsList, responseErr := ec.eventsService.GetAllEvents(location)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)

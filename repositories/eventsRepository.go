@@ -76,13 +76,15 @@ func (er *EventsRepository) QueryGetEvent(eventId string) (*models.Event, *model
 	return &event, nil
 }
 
-func (er *EventsRepository) QueryGetAllEvents() ([]*models.Event, *models.ResponseError) {
+func (er *EventsRepository) QueryGetAllEvents(eventLocation string) ([]*models.Event, *models.ResponseError) {
 	query := `
 		SELECT
 			*
 		FROM
-			events`
-	rows, err := er.db.Query(query)
+			events
+		WHERE
+			(event_location = $1 OR $1 = '')`
+	rows, err := er.db.Query(query, eventLocation)
 
 	if err != nil {
 		return nil, &models.ResponseError{

@@ -24,8 +24,8 @@ func (es EventsService) GetEvent(eventId string) (*models.Event, *models.Respons
 	return es.eventsRepository.QueryGetEvent(eventId)
 }
 
-func (es EventsService) GetAllEvents() ([]*models.Event, *models.ResponseError) {
-	return es.eventsRepository.QueryGetAllEvents()
+func (es EventsService) GetAllEvents(eventLocation string) ([]*models.Event, *models.ResponseError) {
+	return es.eventsRepository.QueryGetAllEvents(eventLocation)
 }
 
 func (es EventsService) UpdateEvent(userId string, event *models.Event) (*models.Event, *models.ResponseError) {
