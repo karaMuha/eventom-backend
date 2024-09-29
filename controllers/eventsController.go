@@ -6,6 +6,8 @@ import (
 	"eventom-backend/services"
 	"eventom-backend/utils"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -88,7 +90,18 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 }
 
 func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Request) {
-	eventsList, responseErr := ec.eventsService.GetAllEvents()
+	locationParam := r.URL.Query().Get("location")
+	freeCapacityParam := r.URL.Query().Get("capacity")
+	freeCapacity := 0
+	if !strings.EqualFold(freeCapacityParam, "") {
+		var err error
+		freeCapacity, err = strconv.Atoi(freeCapacityParam)
+		if err != nil {
+			http.Error(w, "free capacity filter must be empty or a number", http.StatusBadRequest)
+			return
+		}
+	}
+	eventsList, responseErr := ec.eventsService.GetAllEvents(locationParam, freeCapacity)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)

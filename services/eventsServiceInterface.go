@@ -7,7 +7,7 @@ type EventsServiceInterface interface {
 
 	GetEvent(eventId string) (*models.Event, *models.ResponseError)
 
-	GetAllEvents() ([]*models.Event, *models.ResponseError)
+	GetAllEvents(eventLocation string, freeCapacity int) ([]*models.Event, *models.ResponseError)
 
 	UpdateEvent(userId string, event *models.Event) (*models.Event, *models.ResponseError)
 

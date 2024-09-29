@@ -7,7 +7,7 @@ type EventsRepositoryInterface interface {
 
 	QueryGetEvent(eventId string) (*models.Event, *models.ResponseError)
 
-	QueryGetAllEvents() ([]*models.Event, *models.ResponseError)
+	QueryGetAllEvents(eventLocation string, freeCapacity int) ([]*models.Event, *models.ResponseError)
 
 	QueryUpdateEvent(event *models.Event) (*models.Event, *models.ResponseError)
 
