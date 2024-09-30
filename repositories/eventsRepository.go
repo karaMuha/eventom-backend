@@ -76,7 +76,7 @@ func (er *EventsRepository) QueryGetEvent(eventId string) (*models.Event, *model
 	return &event, nil
 }
 
-func (er *EventsRepository) QueryGetAllEvents(eventLocation string, freeCapacity int) ([]*models.Event, *models.ResponseError) {
+func (er *EventsRepository) QueryGetAllEvents(eventName string, eventLocation string, freeCapacity int) ([]*models.Event, *models.ResponseError) {
 	// TODO: checkout squirrel for conditional query building on runtime so the query only has the parts it needs to run. That might improve caching performance
 	query := `
 		SELECT
@@ -84,10 +84,12 @@ func (er *EventsRepository) QueryGetAllEvents(eventLocation string, freeCapacity
 		FROM
 			events
 		WHERE
-			(event_location = $1 OR $1 = '')
+			(to_tsvector('simple', event_name) @@ plainto_tsquery('simple', $1) OR $1 = '')
 			AND
-			(((max_capacity - amount_registrations) >= $2 AND $2 != 0) OR $2 = 0)`
-	rows, err := er.db.Query(query, eventLocation, freeCapacity)
+			(event_location = $2 OR $2 = '')
+			AND
+			((((max_capacity - amount_registrations) >= $3) AND $3 != 0) OR $3 = 0)`
+	rows, err := er.db.Query(query, eventName, eventLocation, freeCapacity)
 
 	if err != nil {
 		return nil, &models.ResponseError{
