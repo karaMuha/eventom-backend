@@ -33,3 +33,6 @@ private-key.pem
 
 # db data
 db-data
+
+# vscode
+.vscode
