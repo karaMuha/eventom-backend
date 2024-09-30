@@ -90,8 +90,10 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 }
 
 func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Request) {
+	eventNameParam := r.URL.Query().Get("name")
 	locationParam := r.URL.Query().Get("location")
 	freeCapacityParam := r.URL.Query().Get("capacity")
+
 	freeCapacity := 0
 	if !strings.EqualFold(freeCapacityParam, "") {
 		var err error
@@ -101,7 +103,8 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 			return
 		}
 	}
-	eventsList, responseErr := ec.eventsService.GetAllEvents(locationParam, freeCapacity)
+
+	eventsList, responseErr := ec.eventsService.GetAllEvents(eventNameParam, locationParam, freeCapacity)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
