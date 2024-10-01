@@ -2,7 +2,9 @@ package repositories
 
 import (
 	"database/sql"
+	"eventom-backend/dtos"
 	"eventom-backend/models"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -76,9 +78,9 @@ func (er *EventsRepository) QueryGetEvent(eventId string) (*models.Event, *model
 	return &event, nil
 }
 
-func (er *EventsRepository) QueryGetAllEvents(eventName string, eventLocation string, freeCapacity int) ([]*models.Event, *models.ResponseError) {
+func (er *EventsRepository) QueryGetAllEvents(eventFilters *dtos.EventFilterDto) ([]*models.Event, *models.ResponseError) {
 	// TODO: checkout squirrel for conditional query building on runtime so the query only has the parts it needs to run. That might improve caching performance
-	query := `
+	query := fmt.Sprintf(`
 		SELECT
 			*
 		FROM
@@ -88,8 +90,9 @@ func (er *EventsRepository) QueryGetAllEvents(eventName string, eventLocation st
 			AND
 			(event_location = $2 OR $2 = '')
 			AND
-			((((max_capacity - amount_registrations) >= $3) AND $3 != 0) OR $3 = 0)`
-	rows, err := er.db.Query(query, eventName, eventLocation, freeCapacity)
+			((((max_capacity - amount_registrations) >= $3) AND $3 != 0) OR $3 = 0)
+		ORDER BY %s %s, id ASC`, eventFilters.SortColumn, eventFilters.SortOrder)
+	rows, err := er.db.Query(query, eventFilters.Name, eventFilters.Location, eventFilters.FreeCapacity)
 
 	if err != nil {
 		return nil, &models.ResponseError{

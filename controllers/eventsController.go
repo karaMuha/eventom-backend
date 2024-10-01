@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"eventom-backend/dtos"
 	"eventom-backend/models"
 	"eventom-backend/services"
 	"eventom-backend/utils"
@@ -90,9 +91,20 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 }
 
 func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Request) {
+	var eventFilters dtos.EventFilterDto
 	eventNameParam := r.URL.Query().Get("name")
 	locationParam := r.URL.Query().Get("location")
 	freeCapacityParam := r.URL.Query().Get("capacity")
+	sortColumnParam := r.URL.Query().Get("column")
+	sortOrderParam := r.URL.Query().Get("order")
+
+	if strings.EqualFold(sortColumnParam, "") {
+		sortColumnParam = "id"
+	}
+
+	if strings.EqualFold(sortOrderParam, "") {
+		sortOrderParam = "ASC"
+	}
 
 	freeCapacity := 0
 	if !strings.EqualFold(freeCapacityParam, "") {
@@ -104,7 +116,20 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	eventsList, responseErr := ec.eventsService.GetAllEvents(eventNameParam, locationParam, freeCapacity)
+	eventFilters.Name = eventNameParam
+	eventFilters.Location = locationParam
+	eventFilters.FreeCapacity = freeCapacity
+	eventFilters.SortColumn = sortColumnParam
+	eventFilters.SortOrder = sortOrderParam
+
+	err := ec.validator.Struct(&eventFilters)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	eventsList, responseErr := ec.eventsService.GetAllEvents(&eventFilters)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
