@@ -91,8 +91,14 @@ func (er *EventsRepository) QueryGetAllEvents(eventFilters *dtos.EventFilterDto)
 			(event_location = $2 OR $2 = '')
 			AND
 			((((max_capacity - amount_registrations) >= $3) AND $3 != 0) OR $3 = 0)
-		ORDER BY %s %s, id ASC`, eventFilters.SortColumn, eventFilters.SortOrder)
-	rows, err := er.db.Query(query, eventFilters.Name, eventFilters.Location, eventFilters.FreeCapacity)
+		ORDER BY
+			%s %s, id ASC
+		LIMIT
+			$4
+		OFFSET
+			$5`, eventFilters.SortColumn, eventFilters.SortOrder)
+	offset := eventFilters.PageSize * (eventFilters.Page - 1)
+	rows, err := er.db.Query(query, eventFilters.Name, eventFilters.Location, eventFilters.FreeCapacity, eventFilters.PageSize, offset)
 
 	if err != nil {
 		return nil, &models.ResponseError{
