@@ -7,6 +7,7 @@ import (
 	"eventom-backend/models"
 	"eventom-backend/services"
 	"eventom-backend/utils"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -106,14 +107,26 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	eventsList, responseErr := ec.eventsService.GetAllEvents(eventFilters)
+	eventsList, totalCount, responseErr := ec.eventsService.GetAllEvents(eventFilters)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
 
-	responseJson, err := json.Marshal(eventsList)
+	eventListMetadata := &dtos.EventListMetadata{
+		CurrentPage:  eventFilters.Page,
+		PageSize:     eventFilters.PageSize,
+		LastPage:     int(math.Ceil(float64(totalCount) / float64(eventFilters.PageSize))),
+		TotalRecords: totalCount,
+	}
+
+	responseData := &dtos.EventListResponse{
+		Events:   eventsList,
+		Metadata: eventListMetadata,
+	}
+
+	responseJson, err := json.Marshal(responseData)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

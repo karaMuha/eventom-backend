@@ -25,7 +25,7 @@ func (es EventsService) GetEvent(eventId string) (*models.Event, *models.Respons
 	return es.eventsRepository.QueryGetEvent(eventId)
 }
 
-func (es EventsService) GetAllEvents(eventFilters *dtos.EventFilterDto) ([]*models.Event, *models.ResponseError) {
+func (es EventsService) GetAllEvents(eventFilters *dtos.EventFilterDto) ([]*models.Event, int, *models.ResponseError) {
 	return es.eventsRepository.QueryGetAllEvents(eventFilters)
 }
 

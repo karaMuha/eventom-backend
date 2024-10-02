@@ -78,10 +78,11 @@ func (er *EventsRepository) QueryGetEvent(eventId string) (*models.Event, *model
 	return &event, nil
 }
 
-func (er *EventsRepository) QueryGetAllEvents(eventFilters *dtos.EventFilterDto) ([]*models.Event, *models.ResponseError) {
+func (er *EventsRepository) QueryGetAllEvents(eventFilters *dtos.EventFilterDto) ([]*models.Event, int, *models.ResponseError) {
 	// TODO: checkout squirrel for conditional query building on runtime so the query only has the parts it needs to run. That might improve caching performance
 	query := fmt.Sprintf(`
 		SELECT
+			COUNT(*) OVER(),
 			*
 		FROM
 			events
@@ -101,7 +102,7 @@ func (er *EventsRepository) QueryGetAllEvents(eventFilters *dtos.EventFilterDto)
 	rows, err := er.db.Query(query, eventFilters.Name, eventFilters.Location, eventFilters.FreeCapacity, eventFilters.PageSize, offset)
 
 	if err != nil {
-		return nil, &models.ResponseError{
+		return nil, 0, &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
 		}
@@ -109,15 +110,16 @@ func (er *EventsRepository) QueryGetAllEvents(eventFilters *dtos.EventFilterDto)
 
 	defer rows.Close()
 
+	totalcount := 0
 	eventsList := make([]*models.Event, 0)
 	var eventId, name, description, location, userId string
 	var maxCapacity, amountRegistrations int
 	var date time.Time
 
 	for rows.Next() {
-		err = rows.Scan(&eventId, &name, &description, &location, &date, &maxCapacity, &amountRegistrations, &userId)
+		err = rows.Scan(&totalcount, &eventId, &name, &description, &location, &date, &maxCapacity, &amountRegistrations, &userId)
 		if err != nil {
-			return nil, &models.ResponseError{
+			return nil, 0, &models.ResponseError{
 				Message: err.Error(),
 				Status:  http.StatusInternalServerError,
 			}
@@ -137,13 +139,13 @@ func (er *EventsRepository) QueryGetAllEvents(eventFilters *dtos.EventFilterDto)
 
 	err = rows.Err()
 	if err != nil {
-		return nil, &models.ResponseError{
+		return nil, 0, &models.ResponseError{
 			Message: err.Error(),
 			Status:  http.StatusInternalServerError,
 		}
 	}
 
-	return eventsList, nil
+	return eventsList, totalcount, nil
 }
 
 func (er *EventsRepository) QueryUpdateEvent(event *models.Event) (*models.Event, *models.ResponseError) {
