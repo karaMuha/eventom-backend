@@ -38,13 +38,13 @@ The entry point of this app is `main.go`. On start up the app will try to connec
 }
 ```
 - GET /events/{id} -> get event with given event id
-- GET /events -> list all events. You can search, filter and sort results using query parameters
+- GET /events?page={number>=1}&page_size=[10, 15, 20, 25] -> list all events. You can search, filter and sort results using query parameters
   - name -> provide parts of the event name to search for it
   - location -> filter for event location
   - capacity -> filter for minimum free capacity
   - column -> sort by column [id, event_name, event_description, event_date, max_capacity, amount_registrations]
   - order -> set order [DESC, ASC]
-  - e.g. /events?location=Köln&capacity=4&sort=event_date&order=DESC
+  - e.g. /events?page=1&page_size=10&location=Köln&capacity=4&sort=event_date&order=DESC
 - (protected) PUT /events/{id} -> update event with given event id. User can only update events created by himself
 - (protected) DELETE /events/{id} -> delete event with given event id. User can only delete events created by himself
 

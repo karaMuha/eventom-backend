@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"eventom-backend/dtos"
 	"eventom-backend/models"
 	"eventom-backend/services"
 	"eventom-backend/utils"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -91,52 +93,40 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 }
 
 func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Request) {
-	var eventFilters dtos.EventFilterDto
-	eventNameParam := r.URL.Query().Get("name")
-	locationParam := r.URL.Query().Get("location")
-	freeCapacityParam := r.URL.Query().Get("capacity")
-	sortColumnParam := r.URL.Query().Get("column")
-	sortOrderParam := r.URL.Query().Get("order")
-
-	if strings.EqualFold(sortColumnParam, "") {
-		sortColumnParam = "id"
-	}
-
-	if strings.EqualFold(sortOrderParam, "") {
-		sortOrderParam = "ASC"
-	}
-
-	freeCapacity := 0
-	if !strings.EqualFold(freeCapacityParam, "") {
-		var err error
-		freeCapacity, err = strconv.Atoi(freeCapacityParam)
-		if err != nil {
-			http.Error(w, "free capacity filter must be empty or a number", http.StatusBadRequest)
-			return
-		}
-	}
-
-	eventFilters.Name = eventNameParam
-	eventFilters.Location = locationParam
-	eventFilters.FreeCapacity = freeCapacity
-	eventFilters.SortColumn = sortColumnParam
-	eventFilters.SortOrder = sortOrderParam
-
-	err := ec.validator.Struct(&eventFilters)
+	eventFilters, err := setEventFilters(r)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	eventsList, responseErr := ec.eventsService.GetAllEvents(&eventFilters)
+	err = ec.validator.Struct(eventFilters)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	eventsList, totalCount, responseErr := ec.eventsService.GetAllEvents(eventFilters)
 
 	if responseErr != nil {
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
 
-	responseJson, err := json.Marshal(eventsList)
+	eventListMetadata := &dtos.EventListMetadata{
+		CurrentPage:  eventFilters.Page,
+		PageSize:     eventFilters.PageSize,
+		LastPage:     int(math.Ceil(float64(totalCount) / float64(eventFilters.PageSize))),
+		TotalRecords: totalCount,
+	}
+
+	responseData := &dtos.EventListResponse{
+		Events:   eventsList,
+		Metadata: eventListMetadata,
+	}
+
+	responseJson, err := json.Marshal(responseData)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -215,4 +205,63 @@ func (ec EventsController) parseEvent(event *models.Event, bodyDecoder *json.Dec
 	}
 
 	return nil
+}
+
+func setEventFilters(r *http.Request) (*dtos.EventFilterDto, error) {
+	var eventFilters dtos.EventFilterDto
+	pageParam := r.URL.Query().Get("page")
+	pageSizeParam := r.URL.Query().Get("page_size")
+	eventNameParam := r.URL.Query().Get("name")
+	locationParam := r.URL.Query().Get("location")
+	freeCapacityParam := r.URL.Query().Get("capacity")
+	sortColumnParam := r.URL.Query().Get("column")
+	sortOrderParam := r.URL.Query().Get("order")
+
+	page := 1
+	if !strings.EqualFold(pageParam, "") {
+		var err error
+		page, err = strconv.Atoi(pageParam)
+		if err != nil {
+			return nil, err
+		}
+		if page < 1 {
+			return nil, errors.New("page must be greater or equal 1")
+		}
+	}
+
+	pageSize := 10
+	if !strings.EqualFold(pageSizeParam, "") {
+		var err error
+		pageSize, err = strconv.Atoi(pageSizeParam)
+		if err != nil {
+			return nil, errors.New("page size must be a number")
+		}
+	}
+
+	freeCapacity := 0
+	if !strings.EqualFold(freeCapacityParam, "") {
+		var err error
+		freeCapacity, err = strconv.Atoi(freeCapacityParam)
+		if err != nil {
+			return nil, errors.New("free capacity must be empty or a number")
+		}
+	}
+
+	if strings.EqualFold(sortColumnParam, "") {
+		sortColumnParam = "id"
+	}
+
+	if strings.EqualFold(sortOrderParam, "") {
+		sortOrderParam = "ASC"
+	}
+
+	eventFilters.Name = eventNameParam
+	eventFilters.Location = locationParam
+	eventFilters.FreeCapacity = freeCapacity
+	eventFilters.SortColumn = sortColumnParam
+	eventFilters.SortOrder = sortOrderParam
+	eventFilters.Page = page
+	eventFilters.PageSize = pageSize
+
+	return &eventFilters, nil
 }
