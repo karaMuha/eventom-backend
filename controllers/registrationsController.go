@@ -15,7 +15,7 @@ type RegistrationsController struct {
 	validator            *validator.Validate
 }
 
-func NewRegistrationsController(registrationsService services.RegistrationsServiceInterface) *RegistrationsController {
+func NewRegistrationsController(registrationsService services.RegistrationsServiceInterface, logger *utils.Logger) *RegistrationsController {
 	return &RegistrationsController{
 		registrationsService: registrationsService,
 		validator:            validator.New(),

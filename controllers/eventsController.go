@@ -7,6 +7,7 @@ import (
 	"eventom-backend/models"
 	"eventom-backend/services"
 	"eventom-backend/utils"
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -18,12 +19,14 @@ import (
 type EventsController struct {
 	eventsService services.EventsServiceInterface
 	validator     *validator.Validate
+	logger        *utils.Logger
 }
 
-func NewEventsController(eventsService services.EventsServiceInterface) *EventsController {
+func NewEventsController(eventsService services.EventsServiceInterface, logger *utils.Logger) *EventsController {
 	return &EventsController{
 		eventsService: eventsService,
 		validator:     validator.New(),
+		logger:        logger,
 	}
 }
 
@@ -32,6 +35,7 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 	err := json.NewDecoder(r.Body).Decode(&event)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelError, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -39,6 +43,7 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 	userId, ok := r.Context().Value(utils.ContextUserIdKey).(string)
 
 	if !ok {
+		ec.logger.Log(utils.LevelFatal, err.Error(), nil)
 		http.Error(w, "Could not convert user id from token to a string", http.StatusInternalServerError)
 		return
 	}
@@ -47,6 +52,7 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 	err = ec.validator.Struct(&event)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelError, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -54,13 +60,17 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 	createdEvent, responseErr := ec.eventsService.CreateEvent(&event)
 
 	if responseErr != nil {
+		ec.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
 
+	ec.logger.Log(utils.LevelInfo, fmt.Sprintf("Event with ID %s created", createdEvent.ID), nil)
+
 	responseJson, err := json.Marshal(&createdEvent)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelFatal, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -76,6 +86,7 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 	event, responseErr := ec.eventsService.GetEvent(eventId)
 
 	if responseErr != nil {
+		ec.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
@@ -83,6 +94,7 @@ func (ec EventsController) HandleGetEvent(w http.ResponseWriter, r *http.Request
 	responseJson, err := json.Marshal(&event)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelError, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -96,6 +108,7 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 	eventFilters, err := setEventFilters(r)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelError, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -103,6 +116,7 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 	err = ec.validator.Struct(eventFilters)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelError, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -110,6 +124,7 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 	eventsList, totalCount, responseErr := ec.eventsService.GetAllEvents(eventFilters)
 
 	if responseErr != nil {
+		ec.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
@@ -129,6 +144,7 @@ func (ec EventsController) HandleGetAllEvents(w http.ResponseWriter, r *http.Req
 	responseJson, err := json.Marshal(responseData)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelFatal, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -146,6 +162,7 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 	responseErr := ec.parseEvent(&event, bodyDecorder)
 
 	if responseErr != nil {
+		ec.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
@@ -155,13 +172,17 @@ func (ec EventsController) HandleUpdateEvent(w http.ResponseWriter, r *http.Requ
 	updatedEvent, responseErr := ec.eventsService.UpdateEvent(userId, &event)
 
 	if responseErr != nil {
+		ec.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
 
+	ec.logger.Log(utils.LevelInfo, fmt.Sprintf("Event with ID %s updated", updatedEvent.ID), nil)
+
 	responseJson, err := json.Marshal(updatedEvent)
 
 	if err != nil {
+		ec.logger.Log(utils.LevelFatal, err.Error(), nil)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -178,9 +199,12 @@ func (ec EventsController) HandleDeleteEvent(w http.ResponseWriter, r *http.Requ
 	responseErr := ec.eventsService.DeleteEvent(userId, eventId)
 
 	if responseErr != nil {
+		ec.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
+
+	ec.logger.Log(utils.LevelInfo, fmt.Sprintf("Event with ID %s deleted", eventId), nil)
 
 	w.WriteHeader(http.StatusOK)
 }

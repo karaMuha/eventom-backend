@@ -8,9 +8,11 @@ import (
 	"eventom-backend/repositories"
 	"eventom-backend/services"
 	"eventom-backend/testutils"
+	"eventom-backend/utils"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,9 +42,11 @@ func (suite *UsersControllerTestSuite) SetupSuite() {
 		testutils.TestContainer = pgContainer
 	}
 
+	logger := utils.NewLogger(os.Stdout)
+
 	usersRepository := repositories.NewUsersRepository(testutils.TestContainer.DB)
 	usersService := services.NewUsersService(usersRepository)
-	usersController := NewUsersController(usersService)
+	usersController := NewUsersController(usersService, logger)
 
 	router := http.NewServeMux()
 	router.HandleFunc("POST /signup", usersController.HandleSignupUser)

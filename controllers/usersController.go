@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"eventom-backend/models"
 	"eventom-backend/services"
+	"eventom-backend/utils"
 	"net/http"
 	"time"
 
@@ -15,7 +16,7 @@ type UsersController struct {
 	validator    *validator.Validate
 }
 
-func NewUsersController(usersService services.UsersServiceInterface) *UsersController {
+func NewUsersController(usersService services.UsersServiceInterface, logger *utils.Logger) *UsersController {
 	return &UsersController{
 		usersService: usersService,
 		validator:    validator.New(),
