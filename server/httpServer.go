@@ -55,8 +55,13 @@ func InitHttpServer(db *sql.DB) *http.Server {
 	router.HandleFunc("GET /registrations", registrationsController.HandleGetAllRegistrations)
 	router.HandleFunc("DELETE /registrations/{id}", registrationsController.HandleCancleRegistration)
 
+	middlewareStack := middlewares.CreateStack(
+		middlewares.RateLimiterMiddleware,
+		middlewares.AuthMiddleware,
+	)
+
 	return &http.Server{
 		Addr:    os.Getenv("SERVER_PORT"),
-		Handler: middlewares.AuthMiddleware(router),
+		Handler: middlewareStack(router),
 	}
 }

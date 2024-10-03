@@ -3,11 +3,28 @@ package middlewares
 import (
 	"context"
 	"eventom-backend/utils"
+	"net"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/time/rate"
 )
+
+type Middleware func(http.Handler) http.Handler
+
+func CreateStack(mws ...Middleware) Middleware {
+	return func(next http.Handler) http.Handler {
+		for i := len(mws) - 1; i >= 0; i-- {
+			mw := mws[i]
+			next = mw(next)
+		}
+
+		return next
+	}
+}
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,5 +66,54 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), utils.ContextUserIdKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func RateLimiterMiddleware(next http.Handler) http.Handler {
+	type client struct {
+		limiter  *rate.Limiter
+		lastSeen time.Time
+	}
+	var mutex sync.Mutex
+	clients := make(map[string]*client)
+
+	// loop through the client ips every minute and clean up those who haven't send a request for atleast three minutes
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+			mutex.Lock()
+			for ip, client := range clients {
+				if time.Since(client.lastSeen) > 3*time.Minute {
+					delete(clients, ip)
+				}
+			}
+		}
+	}()
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		mutex.Lock()
+
+		if _, found := clients[ip]; !found {
+			clients[ip] = &client{
+				limiter: rate.NewLimiter(3, 30),
+			}
+		}
+
+		clients[ip].lastSeen = time.Now()
+
+		mutex.Unlock()
+
+		if !clients[ip].limiter.Allow() {
+			http.Error(w, "Too many request", http.StatusTooManyRequests)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }
