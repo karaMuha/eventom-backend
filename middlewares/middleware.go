@@ -91,6 +91,7 @@ func RateLimiterMiddleware(next http.Handler, logger *utils.Logger) http.Handler
 					delete(clients, ip)
 				}
 			}
+			mutex.Unlock()
 		}
 	}()
 
