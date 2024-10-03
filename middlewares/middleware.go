@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"eventom-backend/utils"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -13,20 +14,20 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type Middleware func(http.Handler) http.Handler
+type Middleware func(http.Handler, *utils.Logger) http.Handler
 
 func CreateStack(mws ...Middleware) Middleware {
-	return func(next http.Handler) http.Handler {
+	return func(next http.Handler, logger *utils.Logger) http.Handler {
 		for i := len(mws) - 1; i >= 0; i-- {
 			mw := mws[i]
-			next = mw(next)
+			next = mw(next, logger)
 		}
 
 		return next
 	}
 }
 
-func AuthMiddleware(next http.Handler) http.Handler {
+func AuthMiddleware(next http.Handler, logger *utils.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestTarget := r.Method + " " + strings.Split(r.URL.Path, "/")[1]
 
@@ -45,6 +46,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		verifiedToken, err := utils.VerifyJwt(jwtToken.Value)
 
 		if err != nil {
+			logger.Log(utils.LevelError, fmt.Sprintf("Failed to verify jwt: %s", err.Error()), map[string]string{
+				"Request IP Address: ": r.RemoteAddr,
+			})
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -69,7 +73,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func RateLimiterMiddleware(next http.Handler) http.Handler {
+func RateLimiterMiddleware(next http.Handler, logger *utils.Logger) http.Handler {
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -93,6 +97,10 @@ func RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
+			logger.Log(utils.LevelError, err.Error(), map[string]string{
+				"Request IP Address: ": ip,
+				"Request URL: ":        r.URL.Path,
+			})
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -110,7 +118,11 @@ func RateLimiterMiddleware(next http.Handler) http.Handler {
 		mutex.Unlock()
 
 		if !clients[ip].limiter.Allow() {
-			http.Error(w, "Too many request", http.StatusTooManyRequests)
+			logger.Log(utils.LevelError, "Too many requests", map[string]string{
+				"Request IP Address: ": ip,
+				"Request URL: ":        r.URL.Path,
+			})
+			http.Error(w, "Too many requests", http.StatusTooManyRequests)
 			return
 		}
 

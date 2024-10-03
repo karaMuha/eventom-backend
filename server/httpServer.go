@@ -62,6 +62,6 @@ func InitHttpServer(db *sql.DB) *http.Server {
 
 	return &http.Server{
 		Addr:    os.Getenv("SERVER_PORT"),
-		Handler: middlewareStack(router),
+		Handler: middlewareStack(router, logger),
 	}
 }
