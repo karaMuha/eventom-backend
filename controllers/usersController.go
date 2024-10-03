@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"eventom-backend/models"
 	"eventom-backend/services"
+	"eventom-backend/utils"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -13,12 +15,14 @@ import (
 type UsersController struct {
 	usersService services.UsersServiceInterface
 	validator    *validator.Validate
+	logger       *utils.Logger
 }
 
-func NewUsersController(usersService services.UsersServiceInterface) *UsersController {
+func NewUsersController(usersService services.UsersServiceInterface, logger *utils.Logger) *UsersController {
 	return &UsersController{
 		usersService: usersService,
 		validator:    validator.New(),
+		logger:       logger,
 	}
 }
 
@@ -29,6 +33,7 @@ func (uc UsersController) HandleSignupUser(w http.ResponseWriter, r *http.Reques
 	responseErr := uc.parseUser(&user, bodyDecoder)
 
 	if responseErr != nil {
+		uc.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
@@ -36,9 +41,12 @@ func (uc UsersController) HandleSignupUser(w http.ResponseWriter, r *http.Reques
 	responseErr = uc.usersService.SignupUser(&user)
 
 	if responseErr != nil {
+		uc.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
+
+	uc.logger.Log(utils.LevelInfo, fmt.Sprintf("User with email %s signed up", user.Email), nil)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -50,6 +58,7 @@ func (uc UsersController) HandleLoginUser(w http.ResponseWriter, r *http.Request
 	responseErr := uc.parseUser(&user, bodyDecorder)
 
 	if responseErr != nil {
+		uc.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
@@ -57,9 +66,12 @@ func (uc UsersController) HandleLoginUser(w http.ResponseWriter, r *http.Request
 	jwtToken, responseErr := uc.usersService.LoginUser(&user)
 
 	if responseErr != nil {
+		uc.logger.Log(utils.LevelError, responseErr.Message, nil)
 		http.Error(w, responseErr.Message, responseErr.Status)
 		return
 	}
+
+	uc.logger.Log(utils.LevelInfo, fmt.Sprintf("User with ID %s logged in", user.ID), nil)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "jwt",

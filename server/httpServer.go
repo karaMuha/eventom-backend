@@ -23,6 +23,8 @@ func InitHttpServer(db *sql.DB) *http.Server {
 	// initialize protected routes map that is used in auth middleware to determine whether a request needs to be authenticated or not
 	utils.SetProtectedRoutes()
 
+	logger := utils.NewLogger(os.Stdout)
+
 	transactionHandler := repositories.NewTxHandler(db)
 
 	eventsRepository := repositories.NewEventsRepository(db)
@@ -33,9 +35,9 @@ func InitHttpServer(db *sql.DB) *http.Server {
 	usersService := services.NewUsersService(usersRepository)
 	registrationsService := services.NewRegistrationsService(registrationsRepository, *transactionHandler)
 
-	eventsController := controllers.NewEventsController(eventsService)
-	usersController := controllers.NewUsersController(usersService)
-	registrationsController := controllers.NewRegistrationsController(registrationsService)
+	eventsController := controllers.NewEventsController(eventsService, logger)
+	usersController := controllers.NewUsersController(usersService, logger)
+	registrationsController := controllers.NewRegistrationsController(registrationsService, logger)
 
 	router := http.NewServeMux()
 
