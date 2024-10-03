@@ -43,7 +43,7 @@ func (ec EventsController) HandleCreateEvent(w http.ResponseWriter, r *http.Requ
 	userId, ok := r.Context().Value(utils.ContextUserIdKey).(string)
 
 	if !ok {
-		ec.logger.Log(utils.LevelFatal, err.Error(), nil)
+		ec.logger.Log(utils.LevelFatal, "Could not convert user id from token to a string", nil)
 		http.Error(w, "Could not convert user id from token to a string", http.StatusInternalServerError)
 		return
 	}
