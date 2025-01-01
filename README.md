@@ -1,6 +1,6 @@
 # Eventom
 ## About this app
-With eventom you can create and register for events
+With eventom you can create and register for events. The purpose of this project was to get familiar with golang and its tooling for api development.
 ## How to run the app
 **Prerequisites:**
 - Docker installed (I am using docker desktop version 4.3 on Windows 11)
